@@ -3,112 +3,89 @@ const fs = require('fs');
 let file = process.argv[2] || 'input';
 let input = fs.readFileSync(file + '.txt').toString().trim().split(',').map(i => parseInt(i));
 
-function program(input) {
-   input = input.map(i => i);
-   let i = 0;
+let next = (machine) => machine[machine.ip++];
 
-   while (input[i] !== 99) {
-      // let param = Math.floor(input[i] / 100);
-      // let opcode = input[i++] % 100;
-      // let operation = ('' + input[i++]).split('').map(i => +i).reverse();
-      // let opcode = '' + operation[1] + operation[0];
-
-      let operation = input[i++];
-      let opcode = operation % 100;
-      operationdiv = Math.floor(operation / 100);
-      let types = ('0000000' + operationdiv).split('').map(i => +i).reverse();
-      console.log('op i=', i - 1, opcode);
-
-      if (opcode === 1) {
-         let src1 = input[i++];
-         let src2 = input[i++];
-         let dst = input[i++];
-         // console.log(src1, src2, dst, types);
-
-         if (!types[0]) { src1 = input[src1]; }
-         if (!types[1]) { src2 = input[src2]; }
-
-         if (!types[2]) {
-         input[dst] = src1 + src2;
-         // console.log('add', dst, src1, src2, input[dst]);
-         }
-         else{ console.log('idk2', i); return; }
-      }
-      else if (opcode === 2) {
-         let src1 = input[i++];
-         let src2 = input[i++];
-         let dst = input[i++];
-
-         if (!types[0]) { src1 = input[src1]; }
-         if (!types[1]) { src2 = input[src2]; }
-
-         if (!types[2]) {
-         input[dst] = src1 * src2;
-         }
-         else{ console.log('idk', i); return; }
-      }
-      else if (opcode === 3) {
-         let src = input[i++];
-         // console.log(input[src]);
-         input[src] = 5;
-         // console.log(input[src], src)
-         // return;
-      }
-      else if (opcode === 4) {
-         console.log('op 4');
-         let src = input[i++];
-         console.log(input[src]);
-      }
-      else if (opcode === 5) {
-         let src1 = input[i++];
-         let src2 = input[i++];
-
-         if (!types[0]) { src1 = input[src1]; }
-         if (!types[1]) { src2 = input[src2]; }
-
-         if (src1 !== 0) {
-            i = src2;
-         }
-      }
-      else if (opcode === 6) {
-         let src1 = input[i++];
-         let src2 = input[i++];
-
-         if (!types[0]) { src1 = input[src1]; }
-         if (!types[1]) { src2 = input[src2]; }
-
-         if (src1 === 0) {
-            i = src2;
-         }
-      }
-      else if (opcode === 7) {
-         let src1 = input[i++];
-         let src2 = input[i++];
-         let dst = input[i++];
-
-         if (!types[0]) { src1 = input[src1]; }
-         if (!types[1]) { src2 = input[src2]; }
-
-         input[dst] = (src1 < src2) ? 1 : 0;
-      }
-      else if (opcode === 8) {
-         let src1 = input[i++];
-         let src2 = input[i++];
-         let dst = input[i++];
-
-         if (!types[0]) { src1 = input[src1]; }
-         if (!types[1]) { src2 = input[src2]; }
-
-         console.log(src1, src2, dst)
-         input[dst] = (src1 === src2) ? 1 : 0;
-      }
-      else {
-         console.log('bad op', i - 1, opcode)
-         return;
-      }
+let getArg = (isImmediate, machine, n) => {
+   let arg = next(machine);
+   if (!isImmediate[n]) {
+      arg = machine[arg];
    }
-
-   return input[0];
+   return arg;
 }
 
-console.log(program(input));
+let getArgs = (isImmediate, machine, num) => {
+   let args = [];
+   for (let i = 0; i < num; ++i) {
+      args.push(getArg(isImmediate, machine, i));
+   }
+   return args;
+}
+
+let consumeInput = () => 5;
+
+let opcodes = {
+   1: (imm, machine) => {
+      let [ src1, src2 ] = getArgs(imm, machine, 2);
+      let dst = next(machine);
+      machine[dst] = src1 + src2;
+   },
+   2: (imm, machine) => {
+      let [ src1, src2 ] = getArgs(imm, machine, 2);
+      let dst = next(machine);
+      machine[dst] = src1 * src2;
+   },
+   3: (imm, machine) => {
+      let dst = next(machine);
+      machine[dst] = consumeInput();
+   },
+   4: (imm, machine) => {
+      let src = next(machine)
+      console.log(machine[src]);
+   },
+   5: (imm, machine) => {
+      let [ src1, src2 ] = getArgs(imm, machine, 2);
+      if (src1 !== 0) {
+         machine.ip = src2;
+      }
+   },
+   6: (imm, machine) => {
+      let [ src1, src2 ] = getArgs(imm, machine, 2);
+      if (src1 === 0) {
+         machine.ip = src2;
+      }
+   },
+   7: (imm, machine) => {
+      let [ src1, src2 ] = getArgs(imm, machine, 2);
+      let dst = next(machine);
+      machine[dst] = (src1 < src2) ? 1 : 0;
+   },
+   8: (imm, machine) => {
+      let [ src1, src2 ] = getArgs(imm, machine, 2);
+      let dst = next(machine);
+      machine[dst] = (src1 === src2) ? 1 : 0;
+   },
+   99: () => { console.log('Exit'); return true; }
+};
+
+function program(input) {
+   let machine = input.map(i => i);
+   machine.ip = 0;
+
+   let exit = false;
+   do {
+      let operation = machine[machine.ip++];
+      let opcode = operation % 100;
+      let isImmediate = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i === 1);
+
+      if (opcodes[opcode]) {
+         exit = opcodes[opcode](isImmediate, machine);
+      } else {
+         console.log(`Bad opcode. ip=${machine.ip - 1} operation=${operation} opcode=${opcode}`);
+         exit = true;
+      }
+   } while (!exit);
+
+   return machine;
+}
+
+program(input);
