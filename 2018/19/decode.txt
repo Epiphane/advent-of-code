@@ -1,0 +1,36 @@
+begin: JMPR init            // addi 4 16 4
+then: reg[3] = 1            // seti 1 2 3
+loop: reg[1] = 1            // seti 1 6 1
+      reg[2] = 1            // mulr 3 1 2
+      reg[2] = (reg[2] == reg[5]) // eqrr 2 5 2
+      reg[4] += reg[2]      // addr 2 4 4
+fals: reg[4] ++             // addi 4 1 4
+true: reg[0] += reg[3]      // addr 3 0 0
+      reg[1] ++             // addi 1 1 1
+      reg[2] = (reg[1] > reg[5]) // gtrr 1 5 2
+      reg[4] += reg[2]      // addr 4 2 4
+fals: reg[4] = 2            // seti 2 8 4
+true: reg[3] ++             // addi 3 1 3
+      reg[2] = (reg[3] > reg[5]) // gtrr 3 5 2
+      reg[4] += reg[2]      // addr 2 4 4
+fals: reg[1] = 4            // seti 1 4 4
+true: reg[4] *= reg[4] (16) // mulr 4 4 4
+init: reg[5] += 2
+      reg[5] *= 5
+      reg[5] += reg[4] (19)
+      reg[5] *= 11
+      reg[2] += reg[5]
+      reg[2] *= reg[4] (22)
+      reg[2] += 18
+      reg[5] += reg[2]
+      reg[4] (25) += reg[0] (1, not 0)
+skipped: GOTO begin   // seti 0 6 4
+skip: reg[2] = reg[4] (27)  // setr 4 8 2
+      reg[2] *= reg[4] (28) // mulr 2 4 2
+      reg[2] += reg[4] (29) // addr 4 2 2
+      reg[2] *= reg[4] (30) // mulr 4 2 2
+      reg[2] *= 14          // muli 2 14 2
+      reg[2] *= reg[4] (32) // mulr 2 4 2
+      reg[5] += reg[2]      // addr 5 2 5
+      reg[0] = 0            // seti 0 1 0
+      GOTO then             // seti 0 5 4
