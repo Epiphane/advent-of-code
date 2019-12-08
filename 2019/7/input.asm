@@ -13,6 +13,8 @@
   18:     r[18] = 361
   19:     r[19] = 442
   20:     r[20] = 99999
+  
+// Phase setting 0
   21:     r[9] = read()
   23:     r[9] = r[9] + 2
   27:     r[9] = r[9] * 5
@@ -20,7 +22,7 @@
   35:     write(r[9])
   37:     exit()
 
-
+// Phase setting 1
   38:     r[9] = read()
   40:     r[9] = r[9] * 3
   44:     r[9] = r[9] + 5
@@ -28,7 +30,7 @@
   52:     write(r[9])
   54:     exit()
 
-
+// Phase setting 2
   55:     r[9] = read()
   57:     r[9] = 4 + r[9]
   61:     r[9] = r[9] * 3
@@ -36,7 +38,7 @@
   69:     write(r[9])
   71:     exit()
 
-
+// Phase setting 3
   72:     r[9] = read()
   74:     r[9] = r[9] * 4
   78:     r[9] = r[9] + 4
@@ -45,7 +47,7 @@
   90:     write(r[9])
   92:     exit()
 
-
+// Phase setting 4
   93:     r[9] = read()
   95:     r[9] = 3 + r[9]
   99:     r[9] = r[9] * 3
@@ -55,7 +57,7 @@
   115:    write(r[9])
   117:    exit()
 
-
+// Phase setting 5
   118:    r[9] = read()
   120:    r[9] = 1 + r[9]
   124:    write(r[9])
@@ -88,7 +90,7 @@
   196:    write(r[9])
   198:    exit()
 
-
+// Phase setting 6
   199:    r[9] = read()
   201:    r[9] = r[9] + 1
   205:    write(r[9])
@@ -121,7 +123,7 @@
   277:    write(r[9])
   279:    exit()
 
-
+// Phase setting 7
   280:    r[9] = read()
   282:    r[9] = 2 + r[9]
   286:    write(r[9])
@@ -154,7 +156,7 @@
   358:    write(r[9])
   360:    exit()
 
-
+// Phase setting 8
   361:    r[9] = read()
   363:    r[9] = r[9] + 1
   367:    write(r[9])
@@ -187,7 +189,7 @@
   439:    write(r[9])
   441:    exit()
 
-
+// Phase setting 9
   442:    r[9] = read()
   444:    r[9] = 1 + r[9]
   448:    write(r[9])
