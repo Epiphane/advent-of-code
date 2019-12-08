@@ -3,6 +3,8 @@ const file = process.argv[2] || 'input';
 const input = fs.readFileSync(file + '.txt').toString().trim().split(',').map(i => parseInt(i));
 const log = console.log;
 
+process.env.DEBUG = true;
+
 const Channel = require('../intcode/channel');
 const Machine = require('../intcode/machine');
 const { permute } = require('../utils');
@@ -35,14 +37,18 @@ function runSystem(phaseSettings) {
          return;
       }
 
+      log(currentMachine.ip, Array.prototype.slice.call(currentMachine, currentMachine.ip, currentMachine.ip + 4));
       currentMachine.step();
 
       if (currentMachine.exited || currentMachine.paused) {
          executor = (executor + 1) % 5;
+         break;
       }
    }
 
    return channels[0].read();
 };
 
-log(permute([5, 6, 7, 8, 9]).reduce((prev, order) => Math.max(prev, runSystem(order)), 0));
+// log(permute([5, 6, 7, 8, 9]).reduce((prev, order) => Math.max(prev, runSystem(order)), 0));
+
+runSystem([5, 6, 7, 8, 9]);

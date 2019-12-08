@@ -1,11 +1,18 @@
+const Channel = require('./channel');
+
+const log = console.log;
+
 module.exports = class Machine {
    constructor(program, stdin, stdout, id) {
+      if (typeof(program) === 'string') {
+         program = program.split(',').map(i => parseInt(i));
+      }
       program.forEach(i => Array.prototype.push.apply(this, [i]));
       this.ip = 0;
       this.paused = false;
       this.exited = false;
-      this.stdin = stdin;
-      this.stdout = stdout;
+      this.stdin = stdin || new Channel;
+      this.stdout = stdout || new Channel;
       this.id = id;
       this.debug = !!process.env.DEBUG;
    }
