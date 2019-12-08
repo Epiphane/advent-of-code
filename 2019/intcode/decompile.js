@@ -50,6 +50,7 @@
 //    12:     r[224] = r[43] * 69
 //    16:     r[224] = -483 + r[224]
 //    20:     write(r[224])
+//   ...
 //
 //  * or not lovingly
 //
@@ -68,11 +69,6 @@ programs.forEach((program, i) => {
       let value;
       if (mutable[machine.ip]) {
          value = `r[${machine.ip++}]`;
-
-         if (isOutput) {
-            console.log(`Machine addr=${machine.ip - 1} is an output register, and mutable. idk what do. exiting`);
-            process.exit();
-         }
       }
       else {
          value = machine.read();
