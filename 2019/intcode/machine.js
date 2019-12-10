@@ -15,18 +15,25 @@ module.exports = class Machine {
       this.stdout = stdout || new Channel;
       this.id = id;
       this.debug = !!process.env.DEBUG;
+      this.relative = 0;
+   }
+
+   get(addr) {
+      this[addr] = this[addr] || 0;
+      return this[addr];
    }
 
    read() {
-      return this[this.ip++];
+      return this.get(this.ip++);
    }
 
    step() {
       this.paused = false;
       const operation = this.read();
       const opcode = operation % 100;
-      const isImmediate = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i === 1);
+      const isImmediate = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i);
 
+      console.log(this.ip - 1, Array.prototype.slice.call(this, this.ip - 1, this.ip + 3));
       const fnName = `op${opcode}`;
       if (!this[fnName]) {
          log(`Bad opcode. ip=${this.ip - 1} operation=${operation} opcode=${opcode}`);
@@ -39,8 +46,10 @@ module.exports = class Machine {
 
    getArg(isImmediate, n) {
       let val = this.read();
-      if (!isImmediate[n]) {
-         val = this[val];
+      if (isImmediate[n] === 0) {
+         val = this.get(val) || 0;
+      } else if (isImmediate[n] === 2) {
+         val = this.get(this.relative + val) || 0;
       }
       return val;
    };
@@ -66,6 +75,9 @@ module.exports = class Machine {
    op1(imm) {
       let [ src1, src2 ] = this.getArgs(imm, 2);
       let dst = this.read();
+      if (imm[2] === 2) {
+         dst += this.relative;
+      }
       this[dst] = src1 + src2;
    };
 
@@ -73,12 +85,18 @@ module.exports = class Machine {
    op2(imm) {
       let [ src1, src2 ] = this.getArgs(imm, 2);
       let dst = this.read();
+      if (imm[2] === 2) {
+         dst += this.relative;
+      }
       this[dst] = src1 * src2;
    };
 
    // In
    op3(imm) {
       let dst = this.read();
+      if (imm[0] === 2) {
+         dst += this.relative;
+      }
       if (this.stdin.empty()) {
          this.ip -= 2;
          this.paused = true;
@@ -87,14 +105,14 @@ module.exports = class Machine {
       }
 
       this[dst] = this.stdin.read();
-      if (this.debug) { log(`${this.id} <= ${this[dst]}`); }
+      if (this.debug) { log(`${this.id} <= ${this.get(dst)}`); }
    };
 
    // Out
    op4(imm) {
-      let src = this.read();
-      this.stdout.submit(this[src]);
-      if (this.debug) { log(`${this.id} => ${this[src]}`); }
+      let [ src ] = this.getArgs(imm, 1);
+      this.stdout.submit(src);
+      if (this.debug) { log(`${this.id} => ${src}`); }
    };
 
    // Jump if non-0
@@ -115,8 +133,12 @@ module.exports = class Machine {
 
    // Less than
    op7(imm) {
+      // if (imm[0] === 1 && imm[])
       let [ src1, src2 ] = this.getArgs(imm, 2);
       let dst = this.read();
+      if (imm[2] === 2) {
+         dst += this.relative;
+      }
       this[dst] = (src1 < src2) ? 1 : 0;
    };
 
@@ -124,6 +146,15 @@ module.exports = class Machine {
    op8(imm) {
       let [ src1, src2 ] = this.getArgs(imm, 2);
       let dst = this.read();
+      if (imm[2] === 2) {
+         dst += this.relative;
+      }
       this[dst] = (src1 === src2) ? 1 : 0;
    };
+
+   // Relative
+   op9(imm) {
+      let [ val ] = this.getArgs(imm, 1);
+      this.relative += val;
+   }
 };
