@@ -6,7 +6,11 @@ const Channel = require('../intcode/channel');
 const Machine = require('../intcode/machine');
 
 let file = process.argv[2] || 'input';
-let input = fs.readFileSync(file + '.txt').toString().trim().split(',').map(i => parseInt(i));
+let input = fs.readFileSync(file + '.txt').toString().trim()
+   .split('\n').map(line =>
+      line.trim()
+   .split(',')
+   .map(i => parseInt(i))
+   )
 
 const log = console.log;
-const print = console.log;
