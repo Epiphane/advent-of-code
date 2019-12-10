@@ -149,12 +149,12 @@ visible.sort(sorter);
 // console.log(x, y, visible, visible.length);
 console.log(visible[199]);
 
-for (let vap = 0; vap < 200; vap ++) {
-   let deposed = visible.shift();
+// for (let vap = 0; vap < 200; vap ++) {
+//    let deposed = visible.shift();
 
-   console.log(deposed);
-   visible.sort(sorter);
-}
+//    console.log(deposed);
+//    visible.sort(sorter);
+// }
 
 // console.log(visible.slice(0, 20).map(i => i.angle))
 
