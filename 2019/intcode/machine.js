@@ -27,13 +27,18 @@ module.exports = class Machine {
       return this.get(this.ip++);
    }
 
+   run() {
+      while (!this.exited) {
+         this.step();
+      }
+   }
+
    step() {
       this.paused = false;
       const operation = this.read();
       const opcode = operation % 100;
-      const isImmediate = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i);
+      const mode = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i);
 
-      console.log(this.ip - 1, Array.prototype.slice.call(this, this.ip - 1, this.ip + 3));
       const fnName = `op${opcode}`;
       if (!this[fnName]) {
          log(`Bad opcode. ip=${this.ip - 1} operation=${operation} opcode=${opcode}`);
@@ -41,23 +46,31 @@ module.exports = class Machine {
          return;
       }
 
-      this[fnName](isImmediate);
+      this[fnName](mode);
    }
 
-   getArg(isImmediate, n) {
+   getArg(mode, n) {
       let val = this.read();
-      if (isImmediate[n] === 0) {
+      if (mode[n] === 0) {
          val = this.get(val) || 0;
-      } else if (isImmediate[n] === 2) {
+      } else if (mode[n] === 2) {
          val = this.get(this.relative + val) || 0;
       }
       return val;
    };
 
-   getArgs(isImmediate, count) {
+   getOutputArg(mode) {
+      let val = this.read();
+      if (mode === 2) {
+         val += this.relative;
+      }
+      return val;
+   }
+
+   getArgs(mode, count) {
       let args = [];
       for (let i = 0; i < count; ++i) {
-         args.push(this.getArg(isImmediate, i));
+         args.push(this.getArg(mode, i));
       }
       return args;
    };
@@ -74,29 +87,20 @@ module.exports = class Machine {
    // Add
    op1(imm) {
       let [ src1, src2 ] = this.getArgs(imm, 2);
-      let dst = this.read();
-      if (imm[2] === 2) {
-         dst += this.relative;
-      }
+      let dst = this.getOutputArg(imm[2]);
       this[dst] = src1 + src2;
    };
 
    // Mul
    op2(imm) {
       let [ src1, src2 ] = this.getArgs(imm, 2);
-      let dst = this.read();
-      if (imm[2] === 2) {
-         dst += this.relative;
-      }
+      let dst = this.getOutputArg(imm[2]);
       this[dst] = src1 * src2;
    };
 
    // In
    op3(imm) {
-      let dst = this.read();
-      if (imm[0] === 2) {
-         dst += this.relative;
-      }
+      let dst = this.getOutputArg(imm[0]);
       if (this.stdin.empty()) {
          this.ip -= 2;
          this.paused = true;
@@ -133,7 +137,6 @@ module.exports = class Machine {
 
    // Less than
    op7(imm) {
-      // if (imm[0] === 1 && imm[])
       let [ src1, src2 ] = this.getArgs(imm, 2);
       let dst = this.read();
       if (imm[2] === 2) {
@@ -145,10 +148,7 @@ module.exports = class Machine {
    // Equal
    op8(imm) {
       let [ src1, src2 ] = this.getArgs(imm, 2);
-      let dst = this.read();
-      if (imm[2] === 2) {
-         dst += this.relative;
-      }
+      let dst = this.getOutputArg(imm[2]);
       this[dst] = (src1 === src2) ? 1 : 0;
    };
 

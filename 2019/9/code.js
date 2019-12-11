@@ -5,8 +5,6 @@ const { permute } = require('../utils');
 const Channel = require('../intcode/channel');
 const Machine = require('../intcode/machine');
 
-process.env.DEBUG = true;
-
 let file = process.argv[2] || 'input';
 let input = fs.readFileSync(file + '.txt').toString().trim()
       .split(',')
@@ -17,8 +15,6 @@ const log = console.log;
 let machine = new Machine(input, new Channel, new Channel, 'machine');
 machine.stdin.submit(1);
 
-while (!machine.exited) {
-   machine.step();
-}
+machine.run();
 
 console.log(machine.stdout);

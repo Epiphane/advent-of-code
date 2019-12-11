@@ -65,4 +65,4 @@ best.asteroids.sort((a, b) => {
    return a.blockers - b.blockers;
 });
 
-console.log(`200th asteroid: <${best.asteroids[199].x},${best.asteroids[199].y}>`);
+console.log(`200th asteroid: <${best.asteroids[199].x},${best.asteroids[199].y}> blocked by ${best.asteroids[199].blockers}`);
