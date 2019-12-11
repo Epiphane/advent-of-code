@@ -39,6 +39,9 @@ module.exports = class Machine {
       const opcode = operation % 100;
       const mode = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i);
 
+      if (this.verbose) {
+         log(`ip: ${this.ip - 1}`.padEnd(10, ' ') + `| opcode: ${operation}`)
+      }
       const fnName = `op${opcode}`;
       if (!this[fnName]) {
          log(`Bad opcode. ip=${this.ip - 1} operation=${operation} opcode=${opcode}`);
