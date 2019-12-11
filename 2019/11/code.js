@@ -5,7 +5,7 @@ const { permute, gcd } = require('../utils');
 const Channel = require('../intcode/channel');
 const Machine = require('../intcode/machine');
 
-// process.env.DEBUG = true;
+process.env.DEBUG = true;
 
 let file = process.argv[2] || 'input';
 let input = fs.readFileSync(file + '.txt').toString().trim()
@@ -20,7 +20,7 @@ const stdout = machine.stdout;
 const stdin = machine.stdin;
 
 // CHANGE TO 0 FOR PART 1
-let map = [[1]];
+let map = [[0]];
 stdin.submit(map[0][0]);
 
 let painted = [];

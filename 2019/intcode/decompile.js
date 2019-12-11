@@ -62,10 +62,9 @@ const programs = fs.readFileSync(file).toString().trim().split('\n').map(line =>
 
 const Machine = require('../intcode/machine');
 
-
 programs.forEach((program, i) => {
    let mutable = {};
-   function formatArg(machine, isImmediate, isOutput) {
+   function formatArg(machine, mode, isOutput) {
       let value;
       if (mutable[machine.ip]) {
          value = `r[${machine.ip++}]`;
@@ -78,7 +77,11 @@ programs.forEach((program, i) => {
          }
       }
 
-      return isImmediate ? value : `r[${value}]`;
+      if (mode === 2) {
+         value = `base + ${value}`;
+      }
+
+      return mode === 1 ? value : `r[${value}]`;
    }
 
    if (programs.length > 0) {
@@ -95,39 +98,71 @@ programs.forEach((program, i) => {
          const addr = machine.ip;
          const operation = machine.read();
          const opcode = operation % 100;
-         const isImmediate = ('0000000' + operation).split('').map(i => +i).reverse().slice(2).map(i => i === 1);
+         const mode = ('0000000' + operation).split('').map(i => +i).reverse().slice(2);
          const volatile = !!mutable[addr];
 
          let cmd = [];
          let nice = '';
          if (opcode === 1) {
             cmd.push('add');
-            cmd.push(formatArg(machine, isImmediate[0], false));
-            cmd.push(formatArg(machine, isImmediate[1], false));
+            cmd.push(formatArg(machine, mode[0], false));
+            cmd.push(formatArg(machine, mode[1], false));
             cmd.push(formatArg(machine, false, true));
-            nice = `${cmd[3]} = ${cmd[1]} + ${cmd[2]}`;
+            if (cmd[1] === 0) {
+               nice = `${cmd[3]} = ${cmd[2]}`;
+            }
+            else if (cmd[2] === 0) {
+               nice = `${cmd[3]} = ${cmd[1]}`;
+            }
+            else if (cmd[3] === cmd[1]) {
+               nice = `${cmd[3]} += ${cmd[2]}`;
+            }
+            else if (cmd[3] === cmd[2]) {
+               nice = `${cmd[3]} += ${cmd[1]}`;
+            }
+            else {
+               nice = `${cmd[3]} = ${cmd[1]} + ${cmd[2]}`;
+            }
          }
          else if (opcode === 2) {
             cmd.push('mul');
-            cmd.push(formatArg(machine, isImmediate[0], false));
-            cmd.push(formatArg(machine, isImmediate[1], false));
+            cmd.push(formatArg(machine, mode[0], false));
+            cmd.push(formatArg(machine, mode[1], false));
             cmd.push(formatArg(machine, false, true));
-            nice = `${cmd[3]} = ${cmd[1]} * ${cmd[2]}`;
+            if (cmd[1] === 1) {
+               nice = `${cmd[3]} = ${cmd[2]}`;
+            }
+            else if (cmd[2] === 1) {
+               nice = `${cmd[3]} = ${cmd[1]}`;
+            }
+            else if (cmd[3] === cmd[1]) {
+               nice = `${cmd[3]} *= ${cmd[2]}`;
+            }
+            else if (cmd[3] === cmd[2]) {
+               nice = `${cmd[3]} *= ${cmd[1]}`;
+            }
+            else {
+               nice = `${cmd[3]} = ${cmd[1]} * ${cmd[2]}`;
+            }
          }
          else if (opcode === 3) {
             cmd.push('in');
             cmd.push(formatArg(machine, false, true));
             nice = `${cmd[1]} = read()`;
+
+            if (addr !== 0 && output === 1) {
+               console.log();
+            }
          }
          else if (opcode === 4) {
             cmd.push('out');
-            cmd.push(formatArg(machine, false, true));
+            cmd.push(formatArg(machine, false, false));
             nice = `write(${cmd[1]})`;
          }
          else if (opcode === 5) {
             cmd.push('jnz');
-            cmd.push(formatArg(machine, isImmediate[0], false));
-            cmd.push(formatArg(machine, isImmediate[1], false));
+            cmd.push(formatArg(machine, mode[0], false));
+            cmd.push(formatArg(machine, mode[1], false));
             nice = `if (${cmd[1]} != 0) jump ${cmd[2]}`;
             if (!volatile && (+cmd[1] > 0 || +cmd[1] < 0)) {
                nice = `jump ${cmd[2]}`;
@@ -135,8 +170,8 @@ programs.forEach((program, i) => {
          }
          else if (opcode === 6) {
             cmd.push('jiz');
-            cmd.push(formatArg(machine, isImmediate[0], false));
-            cmd.push(formatArg(machine, isImmediate[1], false));
+            cmd.push(formatArg(machine, mode[0], false));
+            cmd.push(formatArg(machine, mode[1], false));
             nice = `if (${cmd[1]} == 0) jump ${cmd[2]}`;
             if (!volatile && (+cmd[1] === 0)) {
                nice = `jump ${cmd[2]}`;
@@ -144,17 +179,22 @@ programs.forEach((program, i) => {
          }
          else if (opcode === 7) {
             cmd.push('lt');
-            cmd.push(formatArg(machine, isImmediate[0], false));
-            cmd.push(formatArg(machine, isImmediate[1], false));
+            cmd.push(formatArg(machine, mode[0], false));
+            cmd.push(formatArg(machine, mode[1], false));
             cmd.push(formatArg(machine, false, true));
             nice = `${cmd[3]} = (${cmd[1]} < ${cmd[2]})`;
          }
          else if (opcode === 8) {
             cmd.push('eq');
-            cmd.push(formatArg(machine, isImmediate[0], false));
-            cmd.push(formatArg(machine, isImmediate[1], false));
+            cmd.push(formatArg(machine, mode[0], false));
+            cmd.push(formatArg(machine, mode[1], false));
             cmd.push(formatArg(machine, false, true));
             nice = `${cmd[3]} = (${cmd[1]} == ${cmd[2]})`;
+         }
+         else if (opcode === 9) {
+            cmd.push('base')
+            cmd.push(formatArg(machine, mode[0], false));
+            nice = `base += ${cmd[1]}`;
          }
          else if (opcode === 99) {
             if (operation === 99) {
