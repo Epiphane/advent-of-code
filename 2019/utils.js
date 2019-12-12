@@ -16,6 +16,12 @@ function permute(input) {
    return permArr;
 };
 
+function lcm(x, y) {
+   if ((typeof x !== 'number') || (typeof y !== 'number'))
+    return false;
+  return (!x || !y) ? 0 : Math.abs((x * y) / gcd(x, y));
+}
+
 function gcd(x, y) {
    if ((typeof x !== 'number') || (typeof y !== 'number')) {
       return false;
@@ -33,4 +39,5 @@ function gcd(x, y) {
 module.exports = {
    permute,
    gcd,
+   lcm,
 };

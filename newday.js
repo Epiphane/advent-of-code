@@ -18,3 +18,4 @@ make(`${__dirname}/${year}`);
 make(`${__dirname}/${year}/${day}`);
 fs.copyFileSync('sample.js', `${year}/${day}/code.js`);
 fs.writeFileSync(`${year}/${day}/input.txt`, '');
+fs.writeFileSync(`${year}/${day}/test.txt`, '');
