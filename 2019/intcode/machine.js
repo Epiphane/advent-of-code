@@ -28,7 +28,7 @@ module.exports = class Machine {
    }
 
    run() {
-      while (!this.exited) {
+      while (!this.exited && !this.paused) {
          this.step();
       }
    }
