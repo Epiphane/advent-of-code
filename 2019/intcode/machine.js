@@ -5,7 +5,7 @@ const log = console.log;
 module.exports = class Machine {
    constructor(program, stdin, stdout, id) {
       if (typeof(program) === 'string') {
-         program = program.split(',').map(i => parseInt(i));
+         program = program.trim().split(',').map(i => parseInt(i));
       }
       program.forEach(i => Array.prototype.push.apply(this, [i]));
       this.ip = 0;
@@ -28,9 +28,9 @@ module.exports = class Machine {
    }
 
    run() {
-      while (!this.exited && !this.paused) {
+      do {
          this.step();
-      }
+      } while (!this.exited && !this.paused);
    }
 
    step() {
