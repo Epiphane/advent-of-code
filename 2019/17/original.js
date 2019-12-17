@@ -3,8 +3,8 @@ const md5 = require('../../md5');
 let { Map } = require('../../map');
 const { MakeGrid, MakeRow } = require('../../makegrid');
 const { permute, gcd, lcm } = require('../utils');
-const Channel = require('../intcode/channel');
-const Machine = require('../intcode/machine');
+const { Channel } = require('../intcode/channel');
+const { Machine } = require('../intcode/machine');
 const log = console.log;
 
 let file = process.argv[2] || 'input';
