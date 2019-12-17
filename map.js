@@ -87,6 +87,24 @@ class Map {
    }
 }
 
+function MakeMap(
+   width = 1,
+   height = 1,
+   generator = (() => null),
+   defaultElement = null
+) {
+   let map = new Map(defaultElement);
+
+   for (let x = 0; x < width; x ++) {
+      for (let y = 0; y < height; y ++) {
+         map.set(x, y, generator(x, y));
+      }
+   }
+
+   return map;
+}
+
 module.exports = {
-   Map
+   Map,
+   MakeMap,
 };
