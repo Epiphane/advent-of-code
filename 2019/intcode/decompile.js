@@ -60,7 +60,7 @@ const fs = require('fs');
 const file = process.argv[2] || 'input.txt';
 const programs = fs.readFileSync(file).toString().trim().split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
-const Machine = require('../intcode/machine');
+const { Machine } = require('../intcode/machine');
 
 programs.forEach((program, i) => {
    let mutable = {};

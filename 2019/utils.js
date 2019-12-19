@@ -36,8 +36,11 @@ function gcd(x, y) {
    return x;
 }
 
+function id(i) { return i; }
+
 module.exports = {
    permute,
    gcd,
    lcm,
+   id,
 };

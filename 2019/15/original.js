@@ -2,8 +2,8 @@ const fs = require('fs');
 const md5 = require('../../md5');
 const { MakeGrid, MakeRow } = require('../../makegrid');
 const { permute, gcd, lcm } = require('../utils');
-const Channel = require('../intcode/channel');
-const Machine = require('../intcode/machine');
+const { Channel } = require('../intcode/channel');
+const { Machine } = require('../intcode/machine');
 const log = console.log;
 
 // let give = line.match(/value ([0-9]+) goes to bot ([0-9]+)/);

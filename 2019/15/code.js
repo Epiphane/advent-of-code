@@ -1,5 +1,5 @@
 const fs = require('fs');
-const Machine = require('../intcode/machine');
+const { Machine } = require('../intcode/machine');
 const log = console.log;
 const { Map } = require('../../map');
 

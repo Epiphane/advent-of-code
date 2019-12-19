@@ -5,8 +5,8 @@ const log = console.log;
 
 process.env.DEBUG = true;
 
-const Channel = require('../intcode/channel');
-const Machine = require('../intcode/machine');
+const { Channel } = require('../intcode/channel');
+const { Machine } = require('../intcode/machine');
 const { permute } = require('../utils');
 
 function runSystem(phaseSettings) {

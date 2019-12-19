@@ -1,8 +1,7 @@
-const Channel = require('./channel');
-
+const { Channel } = require('./channel');
 const log = console.log;
 
-module.exports = class Machine {
+class Machine {
    constructor(program, stdin, stdout, id) {
       if (typeof(program) === 'string') {
          program = program.trim().split(',').map(i => parseInt(i));
@@ -45,7 +44,7 @@ module.exports = class Machine {
       const fnName = `op${opcode}`;
       if (!this[fnName]) {
          log(`Bad opcode. ip=${this.ip - 1} operation=${operation} opcode=${opcode}`);
-         this.exit = true;
+         this.exited = true;
          return;
       }
 
@@ -161,3 +160,13 @@ module.exports = class Machine {
       this.relative += val;
    }
 };
+
+function DefaultIntcodeMachine() {
+   const fs = require('fs');
+   return new Machine(fs.readFileSync((process.argv[2] || 'input') + '.txt').toString().trim());
+}
+
+module.exports = {
+   Machine,
+   DefaultIntcodeMachine,
+}

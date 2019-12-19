@@ -2,8 +2,8 @@ const fs = require('fs');
 let md5 = require('../../md5');
 const { MakeGrid, MakeRow } = require('../../makegrid');
 const { permute } = require('../utils');
-const Channel = require('../intcode/channel');
-const Machine = require('../intcode/machine');
+const { Channel } = require('../intcode/channel');
+const { Machine } = require('../intcode/machine');
 
 let file = process.argv[2] || 'input';
 let fileinput = fs.readFileSync(file + '.txt').toString().trim();
