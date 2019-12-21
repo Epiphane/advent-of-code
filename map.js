@@ -77,6 +77,34 @@ class Map {
       }
    }
 
+   forEachInCol(x, callback, includeUndefined) {
+      for (let y = this.min.y; y <= this.max.y; ++y) {
+         if (!this.contents[y] && !includeUndefined) {
+            continue;
+         }
+
+         if (!this.contents[y].hasOwnProperty(x) && !includeUndefined) {
+            continue;
+         }
+
+         callback(this.get(x, y), x, y);
+      }
+   }
+
+   forEachInRow(y, callback, includeUndefined) {
+      if (!this.contents[y] && !includeUndefined) {
+         return;
+      }
+
+      for (let x = this.min.x; x <= this.max.x; ++x) {
+         if (!this.contents[y].hasOwnProperty(x) && !includeUndefined) {
+            continue;
+         }
+
+         callback(this.get(x, y), x, y);
+      }
+   }
+
    reduce(callback, initial, includeUndefined) {
       let result = initial;
       this.forEach((val, x, y) => {

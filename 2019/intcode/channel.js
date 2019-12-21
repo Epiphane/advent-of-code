@@ -30,7 +30,11 @@ class Channel {
    readline() {
       let result = '';
       while (1) {
-         let val = String.fromCharCode(this.read());
+         let n = this.read();
+         if (n > 256) {
+            return n;
+         }
+         let val = String.fromCharCode(n);
          if (val === '\n') {
             break;
          }
