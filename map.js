@@ -46,19 +46,44 @@ class Map {
       }
    }
 
+   map(callback, excludeUndefined) {
+      let result = new Map(this.defaultValue);
+      for (let y = this.min.y; y <= this.max.y; ++y) {
+         if (excludeUndefined && !this.contents[y]) {
+            continue;
+         }
+
+         for (let x = this.min.x; x <= this.max.x; ++x) {
+            if (excludeUndefined && !this.contents[y].hasOwnProperty(x)) {
+               continue;
+            }
+
+            result.set(x, y, callback(this.get(x, y), x, y));
+         }
+      }
+
+      return result;
+   }
+
    print(xJoiner, yJoiner) {
       xJoiner = xJoiner || '';
       yJoiner = yJoiner || '\n';
 
+      let maxSize = 0;
       let rows = [];
       for (let y = this.min.y; y <= this.max.y; ++y) {
          let row = [];
          for (let x = this.min.x; x <= this.max.x; ++x) {
-            row.push(this.get(x, y));
+            let val = '';
+            if (this.has(x, y)) {
+               val = this.get(x, y);
+               maxSize = Math.max(maxSize, `${val}`.length);
+            }
+            row.push(val);
          }
-         rows.push(row.join(xJoiner));
+         rows.push(row);
       }
-      return rows.join(yJoiner);
+      return rows.map(row => row.map(val => `${val}`.padEnd(maxSize)).join(xJoiner)).join(yJoiner);
    }
 
    forEach(callback, includeUndefined) {

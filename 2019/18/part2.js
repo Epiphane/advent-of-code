@@ -12,7 +12,6 @@ let lines = raw.split('\n').map(line => line.trim());
 let map = new Map('#');
 
 let WALL = '#';
-let OPEN = '.';
 let START = '@';
 
 let A = 'A'.charCodeAt(0);
@@ -68,12 +67,14 @@ function insert(element, array) {
    }
  }
 
+ let explored;
 function findBestPath(start) {
-   let explored = {};
+   explored = {};
    let queue = [{ ...start, dist: 0, keys: [], sorted: '' }];
    while (queue.length > 0) {
       const current = queue.shift();
-      let { x, y, dist, keys } = current;
+      let { x, y, dist, keys, sorted } = current;
+      const tile = map.get(x, y);
 
       if (isDone(keys)) {
          return dist;
@@ -96,7 +97,7 @@ function findBestPath(start) {
             const sorted = newKeys.map(id).sort().join();
             explored[sorted] = explored[sorted] || new Map(Infinity);
 
-            if (explored[sorted].get(x, y) < dist + 2) {
+            if (explored[sorted].has(x, y)) {
                return;
             }
             explored[sorted].set(x, y, dist + 1);
@@ -114,97 +115,4 @@ function findBestPath(start) {
    return -1;
 }
 
-log(`Part 1: ${findBestPath(nodes['@'])}`);
-
-// Part 2 is a doozy!
-const { x, y } = nodes['@'];
-
-map.set(x, y, WALL);
-map.set(x - 1, y, WALL);
-map.set(x + 1, y, WALL);
-map.set(x, y - 1, WALL);
-map.set(x, y + 1, WALL);
-map.set(x - 1, y - 1, START);
-map.set(x - 1, y + 1, START);
-map.set(x + 1, y - 1, START);
-map.set(x + 1, y + 1, START);
-
-let robots = [
-   { x: x - 1, y: y - 1 },
-   { x: x - 1, y: y + 1 },
-   { x: x + 1, y: y - 1 },
-   { x: x + 1, y: y + 1 },
-];
-
-function findBestPath2(robots) {
-   let explored = {};
-   let queue = [{
-      robots: robots.map(r => { return { ...r }; }),
-      dist: 0,
-      keys: [],
-      visits: [],
-   }];
-   while (queue.length > 0) {
-      const { robots, dist, keys, visits } = queue.shift();
-
-      if (isDone(keys)) {
-         return dist;
-      }
-
-      const newDist = dist + 1;
-      let check = (robot, x, y) => {
-         let tile = map.get(x, y);
-         if (tile === WALL) {
-            return;
-         }
-         else if (isDoor(tile) && !keys.includes(tile.toLowerCase())) {
-            return;
-         }
-         else {
-            let newKeys = keys.map(id);
-            let newVisits = visits.map(id);
-            let sorted = newKeys.map(id).sort().join();
-            explored[sorted] = explored[sorted] || new Map(Infinity);
-
-            if (explored[sorted].has(x, y)) {
-               return;
-            }
-            explored[sorted].set(x, y, newDist);
-
-            if (isKey(tile) && !newKeys.includes(tile)) {
-               newKeys.push(tile);
-               newVisits.push(newDist);
-            }
-
-            sorted = newKeys.map(id).sort().join();
-            explored[sorted] = explored[sorted] || new Map(Infinity);
-            explored[sorted].set(x, y, newDist);
-
-            insert({
-               robots: robots.map((r, i) => {
-                  if (i === robot) {
-                     return { x, y };
-                  }
-                  else {
-                     return r;
-                  }
-               }),
-               dist: newDist,
-               keys: newKeys,
-               visits: newVisits,
-            }, queue);
-         }
-      };
-
-      robots.forEach(({ x, y }, i) => {
-         check(i, x - 1, y);
-         check(i, x + 1, y);
-         check(i, x, y - 1);
-         check(i, x, y + 1);
-      });
-   }
-
-   return -1;
-}
-
-log(`Part 2: ${findBestPath2(robots)}`);
+log(findBestPath(nodes['@']));
