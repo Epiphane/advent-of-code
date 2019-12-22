@@ -68,53 +68,78 @@ function insert(element, array) {
    }
  }
 
-function findBestPath(start) {
-   let explored = {};
-   let queue = [{ ...start, dist: 0, keys: [], sorted: '' }];
-   while (queue.length > 0) {
-      const current = queue.shift();
-      let { x, y, dist, keys } = current;
+ function findBestPath(robots) {
+    let explored = {};
+    let queue = [{
+       robots: robots.map(r => { return { ...r }; }),
+       dist: 0,
+       keys: [],
+       visits: [],
+    }];
+    while (queue.length > 0) {
+       const { robots, dist, keys, visits } = queue.shift();
 
-      if (isDone(keys)) {
-         return dist;
-      }
+       if (isDone(keys)) {
+          return dist;
+       }
 
-      let check = (x, y) => {
-         let tile = map.get(x, y);
-         if (tile === WALL) {
-            return;
-         }
-         else if (isDoor(tile) && !keys.includes(tile.toLowerCase())) {
-            return;
-         }
-         else {
-            let newKeys = keys.map(id);
-            if (isKey(tile) && !keys.includes(tile)) {
-               newKeys.push(tile);
-            }
+       const newDist = dist + 1;
+       let check = (robot, x, y) => {
+          let tile = map.get(x, y);
+          if (tile === WALL) {
+             return;
+          }
+          else if (isDoor(tile) && !keys.includes(tile.toLowerCase())) {
+             return;
+          }
+          else {
+             let newKeys = keys.map(id);
+             let newVisits = visits.map(id);
+             let sorted = newKeys.map(id).sort().join();
+             explored[sorted] = explored[sorted] || new Map(Infinity);
 
-            const sorted = newKeys.map(id).sort().join();
-            explored[sorted] = explored[sorted] || new Map(Infinity);
+             if (explored[sorted].has(x, y)) {
+                return;
+             }
+             explored[sorted].set(x, y, newDist);
 
-            if (explored[sorted].get(x, y) < dist + 2) {
-               return;
-            }
-            explored[sorted].set(x, y, dist + 1);
+             if (isKey(tile) && !newKeys.includes(tile)) {
+                newKeys.push(tile);
+                newVisits.push(newDist);
+             }
 
-            insert({ x, y, dist: dist + 1, keys: newKeys, sorted }, queue);
-         }
-      };
+             sorted = newKeys.map(id).sort().join();
+             explored[sorted] = explored[sorted] || new Map(Infinity);
+             explored[sorted].set(x, y, newDist);
 
-      check(x - 1, y);
-      check(x + 1, y);
-      check(x, y - 1);
-      check(x, y + 1);
-   }
+             insert({
+                robots: robots.map((r, i) => {
+                   if (i === robot) {
+                      return { x, y };
+                   }
+                   else {
+                      return r;
+                   }
+                }),
+                dist: newDist,
+                keys: newKeys,
+                visits: newVisits,
+             }, queue);
+          }
+       };
 
-   return -1;
-}
+       robots.forEach(({ x, y }, i) => {
+          check(i, x - 1, y);
+          check(i, x + 1, y);
+          check(i, x, y - 1);
+          check(i, x, y + 1);
+       });
+    }
 
-log(`Part 1: ${findBestPath(nodes['@'])}`);
+    return -1;
+ }
+
+log(`Part 1: ${findBestPath([{ ...nodes['@'] }])}`);
 
 // Part 2 is a doozy!
 const { x, y } = nodes['@'];
@@ -136,75 +161,4 @@ let robots = [
    { x: x + 1, y: y + 1 },
 ];
 
-function findBestPath2(robots) {
-   let explored = {};
-   let queue = [{
-      robots: robots.map(r => { return { ...r }; }),
-      dist: 0,
-      keys: [],
-      visits: [],
-   }];
-   while (queue.length > 0) {
-      const { robots, dist, keys, visits } = queue.shift();
-
-      if (isDone(keys)) {
-         return dist;
-      }
-
-      const newDist = dist + 1;
-      let check = (robot, x, y) => {
-         let tile = map.get(x, y);
-         if (tile === WALL) {
-            return;
-         }
-         else if (isDoor(tile) && !keys.includes(tile.toLowerCase())) {
-            return;
-         }
-         else {
-            let newKeys = keys.map(id);
-            let newVisits = visits.map(id);
-            let sorted = newKeys.map(id).sort().join();
-            explored[sorted] = explored[sorted] || new Map(Infinity);
-
-            if (explored[sorted].has(x, y)) {
-               return;
-            }
-            explored[sorted].set(x, y, newDist);
-
-            if (isKey(tile) && !newKeys.includes(tile)) {
-               newKeys.push(tile);
-               newVisits.push(newDist);
-            }
-
-            sorted = newKeys.map(id).sort().join();
-            explored[sorted] = explored[sorted] || new Map(Infinity);
-            explored[sorted].set(x, y, newDist);
-
-            insert({
-               robots: robots.map((r, i) => {
-                  if (i === robot) {
-                     return { x, y };
-                  }
-                  else {
-                     return r;
-                  }
-               }),
-               dist: newDist,
-               keys: newKeys,
-               visits: newVisits,
-            }, queue);
-         }
-      };
-
-      robots.forEach(({ x, y }, i) => {
-         check(i, x - 1, y);
-         check(i, x + 1, y);
-         check(i, x, y - 1);
-         check(i, x, y + 1);
-      });
-   }
-
-   return -1;
-}
-
-log(`Part 2: ${findBestPath2(robots)}`);
+log(`Part 2: ${findBestPath(robots)}`);
