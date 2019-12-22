@@ -51,55 +51,45 @@ function isDone(visited) {
    return true;
 }
 
-function findBestPath(start) {
-   let explored = {};
-   let queue = [{ ...start, dist: 0, keys: [] }];
+function explore(start) {
+   let result = {};
+   let explored = new Map(-1);
+   let queue = [{ ...start, dist: 0, doors: [] }];
    while (queue.length > 0) {
       const current = queue.shift();
-      const { x, y, dist, keys } = current;
+      const { x, y, dist, doors } = current;
       const tile = map.get(x, y);
 
-      if (keys[0] === 'a' && keys[1] === 'f') {
-         log(x, y, tile, dist, keys);
+      if (explored.get(x, y) >= 0 && explored.get(x, y) < dist) {
+         continue;
       }
-
-      if (isDone(keys)) {
-         log(keys);
-         return dist;
-      }
+      explored.set(x, y, dist);
 
       if (tile === WALL) {
          continue;
       }
-      else if (isDoor(tile) && !keys.includes(tile.toLowerCase())) {
-         continue;
-      }
       else if (isKey(tile)) {
-         if (!keys.includes(tile)) {
-            keys.push(tile);
+         // Key
+         if (!result[tile]) {
+            result[tile] = { dist, doors: doors.map(id) };
+         }
+         else if (result[tile].doors.includes(l => doors.indexOf(l) < 0)) {
+            log('Something');
+            return;
          }
       }
-
-      const sorted = keys.map(id).sort().join();
-      explored[sorted] = explored[sorted] || new Map(Infinity);
-      explored[sorted].set(x, y, dist);
+      else if (isDoor(tile)) {
+         // Door
+         doors.push(tile);
+      }
 
       let check = (x, y) => {
          let tile = map.get(x, y);
          if (tile === WALL) {
             return;
          }
-         else if (isDoor(tile) && !keys.includes(tile.toLowerCase())) {
-            return;
-         }
-         else if (isKey(tile) && keys[keys.length - 1] === tile) {
-            return;
-         }
-         else if (explored[sorted].get(x, y) < dist + 1) {
-            return;
-         }
          else {
-            queue.push({ x, y, dist: dist + 1, keys: keys.map(id) });
+            queue.push({ x, y, dist: dist + 1, doors: doors.map(id) });
          }
       };
 
@@ -111,11 +101,10 @@ function findBestPath(start) {
       queue.sort((a, b) => a.dist - b.dist);
    }
 
-   return -1;
+   return result;
 }
 
-log(findBestPath(nodes['@']));
-return;
+explore(nodes['@']);
 
 // for (let node in nodes) {
 //    nodes[node].distances = explore(nodes[node]);
@@ -127,6 +116,9 @@ return;
 // }
 
 // Part 1
+function findBestPath() {
+}
+
 function findBestPath2() {
    let queue = [{ node: '@', dist: 0, visited: [] }];
    let distance = {};

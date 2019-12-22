@@ -1,0 +1,3 @@
+---> @ 0 []
+Queueing { node: 'a', dist: 2, visited: [ 'a' ] } [] []
+A
