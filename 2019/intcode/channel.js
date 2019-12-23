@@ -1,7 +1,10 @@
 class Channel {
-   constructor() {
+   constructor(onEmpty) {
       this.stream = [];
-      this.ascii = false;
+   }
+
+   setOnEmpty(cb) {
+      this.onEmpty = cb;
    }
 
    setASCIIMode(mode) {
@@ -16,8 +19,17 @@ class Channel {
       return this.stream.length === 0;
    }
 
+   peek() {
+      return this.stream[0];
+   }
+
    read() {
-      return this.stream.shift();
+      if (!this.empty() || !this.onEmpty) {
+         return this.stream.shift();
+      }
+      else {
+         return this.onEmpty();
+      }
    }
 
    writeline(line) {
