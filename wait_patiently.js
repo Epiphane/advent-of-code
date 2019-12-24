@@ -21,8 +21,19 @@ console.log(`Requesting ${URL}...`);
    }, (resp) => {
       if (resp.statusCode === 404) {
          const timeout = 1000;
-         console.log(`Request failed, trying again in ${Math.floor(timeout / 1000)} seconds...`);
+         console.log(`Request failed with status code ${resp.statusCode}, trying again in ${Math.floor(timeout / 1000)} seconds...`);
          setTimeout(request, timeout);
+      }
+      else if (resp.statusCode !== 200) {
+         console.log(`Request failed with status code ${resp.statusCode}:`);
+         let data = '';
+         resp.on('data', d => {
+            data += d;
+         });
+
+         resp.on('end', () => {
+            console.log(data);
+         });
       }
       else {
          let data = '';

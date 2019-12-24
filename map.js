@@ -157,7 +157,22 @@ function MakeMap(
    return map;
 }
 
+function MapFromInput(translator, defaultElement) {
+   translator = translator || ((val) => val);
+   let map = new Map(defaultElement);
+
+   require('fs').readFileSync((process.argv[2] || 'input') + '.txt').toString().trim()
+      .split('\n').forEach((line, y) => {
+         line.split('').map((val, x) => {
+            if (val === '\r') { return; }
+            map.set(x, y, translator(val));
+         });
+      });
+   return map;
+}
+
 module.exports = {
    Map,
+   MapFromInput,
    MakeMap,
 };
