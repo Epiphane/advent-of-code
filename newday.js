@@ -2,6 +2,7 @@ var fs = require('fs');
 
 if (process.argv.length < 3) {
    console.log('Usage: newday.js <year> <day>')
+   return;
 }
 
 const make = (path) => {
