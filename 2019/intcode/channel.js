@@ -15,6 +15,10 @@ class Channel {
       this.stream.push(elem);
    }
 
+   write(elem) {
+      this.stream.push(elem);
+   }
+
    empty() {
       return this.stream.length === 0;
    }
@@ -41,7 +45,7 @@ class Channel {
 
    readline() {
       let result = '';
-      while (1) {
+      while (!this.empty()) {
          let n = this.read();
          if (n > 256) {
             return n;

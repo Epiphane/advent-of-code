@@ -26,9 +26,13 @@ class Machine {
       return this.get(this.ip++);
    }
 
-   run() {
+   run(timeout) {
+      let clock = 0;
       do {
          this.step();
+         if (timeout && clock++ > timeout) {
+            break;
+         }
       } while (!this.exited && !this.paused);
    }
 
