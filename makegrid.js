@@ -8,7 +8,7 @@ function PrintRow(row) {
 
 function MakeRow(length, generator) {
    let row = [];
-   for (let i = 0; i < length; i ++) {
+   for (let i = 0; i < length; i++) {
       row.push(generator(i));
    }
 
@@ -32,7 +32,7 @@ function MakeGrid(
    grid.print = (joiner) => PrintGrid(grid, joiner);
    grid.get = (x, y, param) => {
       grid[y] = grid[y] || [];
-      if (typeof(grid[y][x]) === 'undefined') {
+      if (typeof (grid[y][x]) === 'undefined') {
          grid[y][x] = defaultElement(x, y, param);
       }
       if (x < grid.minx) grid.minx = x;
@@ -47,28 +47,32 @@ function MakeGrid(
       grid[y][x] = val;
    }
    grid.forEachRow = (callback) => {
-      for (let y = grid.miny; y <= grid.maxy; y ++) {
+      for (let y = grid.miny; y <= grid.maxy; y++) {
          callback(y, grid[y]);
       }
    }
    grid.forEach = (callback) => {
-      for (let y = grid.miny; y <= grid.maxy; y ++) {
-         for (let x = grid.minx; x <= grid.maxx; x ++) {
+      print('------');
+      return;
+      for (let y = grid.miny; y <= grid.maxy; y++) {
+         console.log(y);
+         for (let x = grid.minx; x <= grid.maxx; x++) {
+            console.log(x, y);
             callback(x, y, grid[y][x]);
          }
       }
    }
    grid.mapRow = (callback) => {
       let mapped = [];
-      for (let y = grid.miny; y <= grid.maxy; y ++) {
+      for (let y = grid.miny; y <= grid.maxy; y++) {
          mapped.push(callback(grid[y]));
       }
    };
    grid.map = (callback) => {
       let mapped = [];
-      for (let y = grid.miny; y <= grid.maxy; y ++) {
+      for (let y = grid.miny; y <= grid.maxy; y++) {
          let row = [];
-         for (let x = grid.minx; x <= grid.maxx; x ++) {
+         for (let x = grid.minx; x <= grid.maxx; x++) {
             row.push(callback(x, y, grid[y][x]));
          }
          mapped.push(row);

@@ -10,6 +10,11 @@ const year = process.argv[2];
 const day = process.argv[3];
 const cookie = process.env['COOKIE'];
 
+if (!cookie) {
+   console.log('Please set the COOKIE environment variable');
+   return;
+}
+
 const URL = `https://adventofcode.com/${year}/day/${day}/input`;
 console.log(`Requesting ${URL}...`);
 
