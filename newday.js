@@ -6,7 +6,7 @@ if (process.argv.length < 3) {
 }
 
 const make = (path) => {
-   if (!fs.existsSync(path)){
+   if (!fs.existsSync(path)) {
       fs.mkdirSync(path);
    }
 }
@@ -18,5 +18,6 @@ console.log(year, day);
 make(`${__dirname}/${year}`);
 make(`${__dirname}/${year}/${day}`);
 fs.copyFileSync('sample.js', `${year}/${day}/code.js`);
+fs.writeFileSync(`${year}/${day}/package.json`, '{"type":"module"}');
 fs.writeFileSync(`${year}/${day}/input.txt`, '');
 fs.writeFileSync(`${year}/${day}/test.txt`, '');
