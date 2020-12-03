@@ -26,7 +26,7 @@ class Map {
    set(x, y, value) {
       if (this.empty()) {
          this.min = { x, y };
-         this.max = { x, y };
+         this.max = { x: x + 1, y: y + 1 };
       }
 
       this.contents[y] = this.contents[y] || [];
@@ -38,22 +38,22 @@ class Map {
       if (y < this.min.y) {
          this.min.y = y;
       }
-      if (x > this.max.x) {
-         this.max.x = x;
+      if (x > this.max.x + 1) {
+         this.max.x = x + 1;
       }
       if (y > this.max.y) {
-         this.max.y = y;
+         this.max.y = y + 1;
       }
    }
 
    map(callback, excludeUndefined) {
       let result = new Map(this.defaultValue);
-      for (let y = this.min.y; y <= this.max.y; ++y) {
+      for (let y = this.min.y; y < this.max.y; ++y) {
          if (excludeUndefined && !this.contents[y]) {
             continue;
          }
 
-         for (let x = this.min.x; x <= this.max.x; ++x) {
+         for (let x = this.min.x; x < this.max.x; ++x) {
             if (excludeUndefined && !this.contents[y].hasOwnProperty(x)) {
                continue;
             }
@@ -71,9 +71,9 @@ class Map {
 
       let maxSize = 0;
       let rows = [];
-      for (let y = this.min.y; y <= this.max.y; ++y) {
+      for (let y = this.min.y; y < this.max.y; ++y) {
          let row = [];
-         for (let x = this.min.x; x <= this.max.x; ++x) {
+         for (let x = this.min.x; x < this.max.x; ++x) {
             let val = '';
             if (this.has(x, y)) {
                val = this.get(x, y);
@@ -87,12 +87,12 @@ class Map {
    }
 
    forEach(callback, includeUndefined) {
-      for (let y = this.min.y; y <= this.max.y; ++y) {
+      for (let y = this.min.y; y < this.max.y; ++y) {
          if (!this.contents[y] && !includeUndefined) {
             continue;
          }
 
-         for (let x = this.min.x; x <= this.max.x; ++x) {
+         for (let x = this.min.x; x < this.max.x; ++x) {
             if (!this.contents[y].hasOwnProperty(x) && !includeUndefined) {
                continue;
             }
@@ -103,7 +103,7 @@ class Map {
    }
 
    forEachInCol(x, callback, includeUndefined) {
-      for (let y = this.min.y; y <= this.max.y; ++y) {
+      for (let y = this.min.y; y < this.max.y; ++y) {
          if (!this.contents[y] && !includeUndefined) {
             continue;
          }
@@ -121,7 +121,7 @@ class Map {
          return;
       }
 
-      for (let x = this.min.x; x <= this.max.x; ++x) {
+      for (let x = this.min.x; x < this.max.x; ++x) {
          if (!this.contents[y].hasOwnProperty(x) && !includeUndefined) {
             continue;
          }
@@ -148,8 +148,8 @@ function MakeMap(
 ) {
    let map = new Map(defaultElement);
 
-   for (let x = 0; x < width; x ++) {
-      for (let y = 0; y < height; y ++) {
+   for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
          map.set(x, y, generator(x, y));
       }
    }
