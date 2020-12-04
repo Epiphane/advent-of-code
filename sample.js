@@ -15,3 +15,27 @@ let lines = raw.split('\n').map(line => line.trim())
 let input = lines;
 
 let map = new Map('.');
+
+lines.forEach((line, y) => {
+    if (!line) {
+        print('No input');
+        return;
+    }
+
+    line.forEach((val, x) => {
+        map.set(x, y, val);
+    })
+
+    let match = line.match(/([0-9]+)([a-z]+)/);
+    if (match) {
+
+    }
+    else {
+        print(`ERROR: No match for string '${line}'`);
+    }
+});
+
+let N;
+if (lines.length === 1) {
+    N = +lines[0];
+}
