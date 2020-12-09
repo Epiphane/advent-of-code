@@ -51,18 +51,6 @@ while (!machine.hasRun[machine.ip]) {
 print(`Part 1: ${machine.accm}`);
 
 // Part 2
-function isGood(lines) {
-  let machine = new Machine(lines);
-  while (!machine.hasRun[machine.ip] && machine.ip < machine.instr.length) {
-    machine.step();
-  }
-
-  return {
-    good: machine.ip >= machine.instr.length,
-    machine,
-  };
-}
-
 instr.forEach((inst, line) => {
   if (inst[0] === "acc") return;
 
