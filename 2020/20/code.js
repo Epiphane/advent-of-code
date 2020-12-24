@@ -1,6 +1,6 @@
 import fs from "fs";
 import md5 from "../../md5.js";
-import { Map } from "../../map.js";
+import { Map, MapFromString } from "../../map.js";
 import { permute, gcd, lcm } from "../../utils.js";
 import { question } from "readline-sync";
 
@@ -13,41 +13,26 @@ let raw = fs
   .toString()
   .trim();
 
-let lines = raw.split("\n").map((line) => line.trim());
-let input = lines;
+let groups = raw.split(/\r?\n\r?\n/).map((line) =>
+  line.trim().split('\n').map(line =>
+    line.trim()));
 
 //let map = new Map(".");
 let tiles = {};
 
-let tile = new Map(".");
-let tnum = 0;
-let ts = 0;
-for (let y = 0; y < lines.length; y++) {
-  const line = lines[y];
+groups.forEach(group => {
+  let match = group.shift().match(/Tile ([0-9]+):/);
+  let tileId = parseInt(match[1]);
 
-  if (!line) {
-    tiles[tnum] = tile;
-    tile = new Map(".");
-  }
-
-  for (let x = 0; x < line.length; x++) {
-    let match = line.match(/Tile ([0-9]+):/);
-    if (match) {
-      tnum = +match[1];
-      ts = y + 1;
-    } else {
-      const val = line[x];
-      // console.log(x, y - ts);
-      tile.set(x, y - ts, val);
-    }
-  }
-}
-
-tiles[tnum] = tile;
+  let tile = tiles[tileId] = new Map(".");
+  group.forEach((line, y) =>
+    line.split('').forEach((val, x) =>
+      tile.set(x, y, val)));
+})
 
 function calculate(tile) {
   if (!tile.get) {
-    console.trace();
+    tile = tiles[tile];
   }
   let scores = ["", "", "", ""];
   for (let x = 0; x < 10; x++) {
@@ -57,213 +42,195 @@ function calculate(tile) {
     scores[3] = (tile.get(0, x) === "#" ? "1" : "0") + scores[3];
   }
 
-  return scores;
-}
-
-function bestScores(tile) {
-  let scores = calculate(tile);
-
-  let s = [];
-  s[0] = Math.max(
-    parseInt(scores[0], 2),
-    parseInt(scores[0].split("").reverse().join(""), 2)
-  );
-  s[1] = Math.max(
-    parseInt(scores[1], 2),
-    parseInt(scores[1].split("").reverse().join(""), 2)
-  );
-  s[2] = Math.max(
-    parseInt(scores[2], 2),
-    parseInt(scores[2].split("").reverse().join(""), 2)
-  );
-  s[3] = Math.max(
-    parseInt(scores[3], 2),
-    parseInt(scores[3].split("").reverse().join(""), 2)
-  );
-
-  return s.map((i) => i.toString(2));
-}
-
-let count = {};
-let shapes = {};
-for (let id in tiles) {
-  const tile = tiles[id];
-  let s = bestScores(tile);
-
-  shapes[id] = s;
-  s.forEach((i) => {
-    count[i] = count[i] || [];
-    count[i].push(id);
-  });
-}
-
-let map = new Map(".");
-
-let tids = [];
-let best = -1;
-for (let id in shapes) {
-  let shape = shapes[id];
-
-  let m = shape.map((i) => count[i]).filter((i) => i.length === 1);
-  tids.push(id);
-
-  if (best < 0 && m.length === 2) {
-    best = id;
-  }
+  return scores.map(s => parseInt(s));
 }
 
 function flip(tile) {
-  return tile.map((_, x, y) => tile.get(9 - x, y));
+  return tile.map((_, x, y) => tile.get(tile.max.x - 1 - x, y));
 }
 
 function rot(tile) {
   return tile.map((_, x, y) => {
-    let nx = 9 - y;
+    let nx = tile.max.x - 1 - y;
     let ny = x;
 
     return tile.get(nx, ny);
   });
 }
 
-let poss = [];
-let m = [];
-let ids = [];
-for (let i = 0; i < 12; i++) {
-  let r = [];
-  for (let j = 0; j < 12; j++) {
-    r.push(0);
-  }
-  m.push(r);
-  ids.push(r.map(() => 0));
-  poss.push(r.map(() => 0));
+function showArray(arr) {
+  return arr.map(row => row.map(i => i || '[__]').join(' ')).join('\n');
 }
 
-// print(best);
-print(tiles[best].print());
-let t1sc = bestScores(tiles[best]);
-while (count[t1sc[1]].length === 1 || count[t1sc[2]].length === 1) {
-  print("rotate");
-  tiles[best] = rot(tiles[best]);
-  t1sc = bestScores(tiles[best]);
-}
-print(t1sc);
-print(tiles[best].print());
+let count = {};
+for (let id in tiles) {
+  const addToCount = (val) => {
+    count[val] = count[val] || [];
+    count[val].push(id);
+  };
 
-tids.splice(tids.indexOf(best), 1);
-
-// print(count["1101111101"]);
-
-poss[0][0] = [best];
-let opts = [{ x: 0, y: 0 }];
-
-while (opts.length > 0) {
-  let { x, y } = opts.shift();
+  calculate(tiles[id]).forEach(addToCount);
+  calculate(flip(tiles[id])).forEach(addToCount);
 }
 
-m[0][0] = tiles[best];
-ids[0][0] = best;
-for (let i = 0; i < 12; i++) {
-  for (let j = 0; j < 12; j++) {
-    if (i === 0 && j === 0) continue;
-    print("-----------------------------");
-    print("fitting ", i, j);
+let tileIds = Object.keys(tiles);
+let corners = tileIds.filter(id =>
+  calculate(tiles[id]).filter(shape =>
+    count[shape].length === 1).length === 2
+)
 
-    for (let k = 0; k < tids.length; k++) {
-      let id = tids[k];
-      let nTile = tiles[id];
-      let mybest = bestScores(nTile);
-      //   if (mybest.filter((i) => i === "1101111101").length > 0) {
-      //     print(id);
-      //   } else {
-      //     continue;
-      //   }
+print(`Part 1:`, corners.reduce((prev, i) => prev * i, 1))
 
-      let sflip = false;
-      let above = false;
-      if (i > 0) {
-        mybest.forEach((score, side) => {
-          let oshape = bestScores(m[i - 1][j]);
-          if (oshape[2] === score) {
-            above = 4 - side;
-            // if (above === 4) above = 0;
-          }
-        });
+// Part 2
+let SIZE = Math.sqrt(tileIds.length);
+let ids = [...new Array(SIZE)].map(() =>
+  [...new Array(SIZE)].fill(0));
+let possibilities = [...new Array(SIZE)].map(() =>
+  [...new Array(SIZE)].map(() => null));
 
-        if (above === false) {
-          continue;
-        }
-      }
+{
+  const topLeft = ids[0][0] = corners[0];
+  let neighbors = calculate(topLeft).map(score => count[score].filter(id => id !== topLeft));
+  let rots = 0;
+  while (neighbors[0].length || neighbors[3].length) {
+    neighbors.push(neighbors.shift());
+    tiles[topLeft] = rot(tiles[topLeft]);
 
-      let left = false;
-      if (j > 0) {
-        mybest.forEach((score, side) => {
-          let oshape = bestScores(m[i][j - 1]);
-          if (oshape[1] === score) {
-            print("match", oshape[1].toString(2), score.toString(2));
-            left = 3 - side;
-          }
-        });
-
-        if (!left) {
-          continue;
-        }
-      }
-
-      print(id, k, above, left);
-
-      if (above !== false && left !== false) {
-        print(hi);
-      }
-
-      print("!!!!!!!!!!!!!");
-      print(tiles[id].print());
-      for (let xx = 0; xx < left; xx++) {
-        print("rot");
-        tiles[id] = rot(tiles[id]);
-      }
-      //   print(tiles[id].print());
-      let myScore = calculate(tiles[id]);
-
-      if (j > 0) {
-        let left = m[i][j - 1];
-        let lScore = calculate(left);
-        print("left:", lScore);
-        print(left.print());
-        if (lScore[1] !== myScore[3]) {
-          print("flippin");
-          tiles[id] = flip(tiles[id]);
-          tiles[id] = rot(tiles[id]);
-          tiles[id] = rot(tiles[id]);
-          myScore = calculate(tiles[id]);
-        }
-      }
-      if (i > 0) {
-        let top = m[i - 1][j];
-        let tScore = calculate(top);
-        print("top:", tScore);
-        print(top.print());
-        if (tScore[2] !== myScore[0]) {
-          print("flippin 2");
-          tiles[id] = flip(tiles[id]);
-          myScore = calculate(tiles[id]);
-        }
-      }
-      print("final:", myScore);
-      print(tiles[id].print());
-
-      ids[i][j] = id;
-      m[i][j] = tiles[id];
-      tids.splice(tids.indexOf(id), 1);
+    if (++rots === 4) {
+      let t = neighbors[1];
+      neighbors[1] = neighbors[3];
+      neighbors[3] = t;
+      tiles[topLeft] = flip(tiles[topLeft]);
+      tiles[topLeft] = rot(tiles[topLeft]);
+      tiles[topLeft] = rot(tiles[topLeft]);
     }
+  }
 
-    if (!ids[i][j]) {
-      print("uh oh", i, j);
-      print(ids[0]);
-      print(m[i][j - 1].print());
-      let bs = bestScores(m[i][j - 1]);
-      print(bs, bs[1], count[bs[1]]);
+  possibilities[0][1] = neighbors[1];
+  possibilities[1][0] = neighbors[2];
+}
+
+for (let y = 0; y < SIZE; y++) {
+  for (let x = 0; x < SIZE; x++) {
+    if (x === 0 && y === 0) continue;
+
+    let poss = possibilities[y][x];
+    if (!poss || poss.length !== 1) {
+      print(x, y, poss);
       a = 100;
     }
-    // i = j = 12;
+
+    let tileId = ids[y][x] = poss[0];
+    let neighbors = calculate(tileId).map(score =>
+      count[score].filter(id => id !== tileId));
+    let rots = 0;
+    if (x > 0) {
+      while (neighbors[3][0] !== ids[y][x - 1]) {
+        neighbors.push(neighbors.shift());
+        tiles[tileId] = rot(tiles[tileId]);
+      }
+
+      let s1 = calculate(tileId);
+      let s2 = calculate(ids[y][x - 1]);
+
+      if (s1[3] === s2[1]) {
+        tiles[tileId] = flip(tiles[tileId]);
+        tiles[tileId] = rot(tiles[tileId]);
+        tiles[tileId] = rot(tiles[tileId]);
+      }
+    }
+    else {
+      while (neighbors[0][0] !== ids[y - 1][x]) {
+        neighbors.push(neighbors.shift());
+        tiles[tileId] = rot(tiles[tileId]);
+      }
+
+      let s1 = calculate(tileId);
+      let s2 = calculate(ids[y - 1][x]);
+
+      if (s1[0] === s2[2]) {
+        tiles[tileId] = flip(tiles[tileId]);
+      }
+    }
+    neighbors = calculate(tileId).map(score =>
+      count[score].filter(id => id !== tileId));
+
+    if (y > 0) {
+      possibilities[y - 1][x] = neighbors[0];
+    }
+    if (x < SIZE - 1) {
+      possibilities[y][x + 1] = neighbors[1];
+    }
+    if (y < SIZE - 1) {
+      possibilities[y + 1][x] = neighbors[2];
+    }
+    if (x > 0) {
+      possibilities[y][x - 1] = neighbors[3];
+    }
   }
 }
+
+let map = new Map(' ');
+
+ids.forEach((row, y_) => {
+  row.forEach((id, x_) => {
+    tiles[id].forEach((val, x, y) => {
+      if (x === 0 || y === 0 || x === tiles[id].max.x - 1 || y === tiles[id].max.y - 1) {
+        return;
+      }
+      map.set(
+        x - 1 + x_ * (tiles[id].max.x - 2),
+        y - 1 + y_ * (tiles[id].max.y - 2),
+        val
+      );
+    });
+  });
+});
+
+const creature = MapFromString(`                  #
+#    ##    ##    ###
+ #  #  #  #  #  #   `);
+
+// print(map.print());
+
+let hasCreatures = false;
+let rots = 0;
+while (!hasCreatures) {
+  for (let y_ = 0; y_ < map.max.y - creature.max.y; y_++) {
+    for (let x_ = 0; x_ < map.max.x - creature.max.x; x_++) {
+      let match = true;
+      for (let j = 0; match && j < creature.max.y; j++) {
+        for (let i = 0; match && i < creature.max.x; i++) {
+          let x = x_ + i;
+          let y = y_ + j;
+
+          if (creature.get(i, j) === '#') {
+            match = map.get(x, y) === '#';
+          }
+        }
+      }
+
+      if (match) {
+        hasCreatures = true;
+
+        for (let j = 0; match && j < creature.max.y; j++) {
+          for (let i = 0; match && i < creature.max.x; i++) {
+            let x = x_ + i;
+            let y = y_ + j;
+
+            if (creature.get(i, j) === '#') {
+              map.set(x, y, 'O');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  map = rot(map);
+  if (++rots === 4) {
+    map = flip(map);
+  }
+}
+
+print(`Part 2:`, map.reduce((prev, val) => prev + (val === '#' ? 1 : 0), 0));

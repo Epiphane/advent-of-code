@@ -155,14 +155,11 @@ function MakeMap(
   return map;
 }
 
-function MapFromInput(translator, defaultElement) {
+function MapFromString(input, translator, defaultElement) {
   translator = translator || ((val) => val);
   let map = new Map(defaultElement);
 
-  require("fs")
-    .readFileSync((process.argv[2] || "input") + ".txt")
-    .toString()
-    .trim()
+  input
     .split("\n")
     .forEach((line, y) => {
       line.split("").map((val, x) => {
@@ -175,8 +172,20 @@ function MapFromInput(translator, defaultElement) {
   return map;
 }
 
+function MapFromInput(translator, defaultElement) {
+  return MapFromString(
+    require("fs")
+      .readFileSync((process.argv[2] || "input") + ".txt")
+      .toString()
+      .trim(),
+    translator,
+    defaultElement
+  )
+}
+
 module.exports = {
   Map,
+  MapFromString,
   MapFromInput,
   MakeMap,
 };
