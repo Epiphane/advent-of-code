@@ -1,0 +1,23 @@
+Immune System:
+84|9798|immune to bludgeoning|1151|fire|9
+255|9756|weak to cold, radiation|382|slashing|17
+4943|6022|weak to bludgeoning|11|bludgeoning|4
+305|3683|weak to bludgeoning, slashing|107|cold|5
+1724|6584|weak to radiation|30|cold|6
+2758|5199|immune to slashing, bludgeoning, cold; weak to fire|18|bludgeoning|15
+643|9928|immune to fire; weak to slashing, bludgeoning|149|fire|14
+219|8810||368|cold|3
+9826|10288|weak to bludgeoning; immune to cold|8|cold|18
+2417|9613|weak to fire, cold|36|cold|19
+
+Infection:
+1379|46709||66|slashing|16
+1766|15378|weak to bludgeoning|12|radiation|10
+7691|33066|weak to bludgeoning|7|slashing|12
+6941|43373|weak to cold|12|fire|7
+5526|28081|weak to fire, slashing|7|bludgeoning|11
+5844|41829||11|bludgeoning|20
+370|25050|immune to radiation; weak to fire|120|radiation|2
+164|42669||481|fire|13
+3956|30426|weak to radiation|13|cold|8
+2816|35467|immune to slashing, radiation, fire; weak to cold|24|slashing|1
