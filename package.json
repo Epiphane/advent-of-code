@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/readline-sync": "^1.4.4",
+    "nodemon": "^2.0.15",
+    "ts-node": "^10.4.0"
+  },
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
+}

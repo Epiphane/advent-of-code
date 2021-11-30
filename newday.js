@@ -17,7 +17,7 @@ console.log(year, day);
 
 make(`${__dirname}/${year}`);
 make(`${__dirname}/${year}/${day}`);
-fs.copyFileSync('sample.js', `${year}/${day}/code.js`);
-fs.writeFileSync(`${year}/${day}/package.json`, '{"type":"module"}');
+fs.copyFileSync('0000/00/initial.ts', `${year}/${day}/code.ts`);
+fs.writeFileSync(`${year}/${day}/nodemon.json`, '{"ext": "ts,js,json,txt","watch":"../../"}');
 fs.writeFileSync(`${year}/${day}/input.txt`, '');
 fs.writeFileSync(`${year}/${day}/test.txt`, '');
