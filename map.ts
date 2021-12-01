@@ -10,8 +10,7 @@ export class Map<T> {
   min?: Point;
   max?: Point;
 
-  constructor(private readonly defaultValue?: T) {
-  }
+  constructor(private readonly defaultValue?: T) {}
 
   has(x: number, y: number) {
     return this.contents[y] && this.contents[y].hasOwnProperty(x);
@@ -48,7 +47,10 @@ export class Map<T> {
     }
   }
 
-  map<U>(callback: ((value: T, x: number, y: number) => U), excludeUndefined = false) {
+  map<U>(
+    callback: (value: T, x: number, y: number) => U,
+    excludeUndefined = false
+  ) {
     let result = new Map<U>();
     if (!this.min || !this.max) {
       return result;
@@ -71,9 +73,9 @@ export class Map<T> {
     return result;
   }
 
-  print(colDelimiter = '', rowDelimiter = '\n') {
+  print(colDelimiter = "", rowDelimiter = "\n") {
     if (!this.min || !this.max) {
-      return '';
+      return "";
     }
 
     let maxSize = 0;
@@ -91,18 +93,21 @@ export class Map<T> {
       rows.push(row);
     }
     return rows
-      .map(row => row.map(val => val.padEnd(maxSize)).join(colDelimiter))
+      .map((row) => row.map((val) => val.padEnd(maxSize)).join(colDelimiter))
       .join(rowDelimiter);
   }
 
-  forEach(callback: (value: T, x: number, y: number) => void, includeUndefined = false) {
+  forEach(
+    callback: (value: T, x: number, y: number) => void,
+    includeUndefined = false
+  ) {
     if (!this.min || !this.max) {
       return;
     }
 
     for (let y = this.min.y; y < this.max.y; ++y) {
       if (!this.contents[y] && !includeUndefined) {
-         continue;
+        continue;
       }
 
       for (let x = this.min.x; x < this.max.x; ++x) {
@@ -115,7 +120,11 @@ export class Map<T> {
     }
   }
 
-  forEachInCol(x: number, callback: (value: T, x: number, y: number) => void, includeUndefined = false) {
+  forEachInCol(
+    x: number,
+    callback: (value: T, x: number, y: number) => void,
+    includeUndefined = false
+  ) {
     if (!this.min || !this.max) {
       return;
     }
@@ -133,7 +142,11 @@ export class Map<T> {
     }
   }
 
-  forEachInRow(y: number, callback: (value: T, x: number, y: number) => void, includeUndefined = false) {
+  forEachInRow(
+    y: number,
+    callback: (value: T, x: number, y: number) => void,
+    includeUndefined = false
+  ) {
     if (!this.min || !this.max) {
       return;
     }
@@ -151,7 +164,11 @@ export class Map<T> {
     }
   }
 
-  reduce<U>(callback: (current: U, value: T, x: number, y: number) => U, initial: U, excludeUndefined?: boolean) {
+  reduce<U>(
+    callback: (current: U, value: T, x: number, y: number) => U,
+    initial: U,
+    excludeUndefined?: boolean
+  ) {
     let result = initial;
     this.forEach((val, x, y) => {
       result = callback(result, val, x, y);
@@ -164,7 +181,7 @@ export class Map<T> {
 export function MakeMap<T>(
   width = 1,
   height = 1,
-  generator: ((x: number, y: number) => T | undefined) = () => undefined,
+  generator: (x: number, y: number) => T | undefined = () => undefined,
   defaultElement?: T
 ) {
   let map = new Map(defaultElement);
@@ -178,29 +195,34 @@ export function MakeMap<T>(
   return map;
 }
 
-export function MapFromString<T>(input: string, defaultElement?: T, translator: ((char: string) => T) = id) {
+export function MapFromString<T>(
+  input: string,
+  defaultElement?: T,
+  translator: (char: string) => T = id
+) {
   let map = new Map(defaultElement);
 
-  input
-    .split("\n")
-    .forEach((line, y) => {
-      line.split("").map((val, x) => {
-        if (val === "\r") {
-          return;
-        }
-        map.set(x, y, translator(val));
-      });
+  input.split("\n").forEach((line, y) => {
+    line.split("").map((val, x) => {
+      if (val === "\r") {
+        return;
+      }
+      map.set(x, y, translator(val));
     });
+  });
   return map;
 }
 
-export function MapFromInput<T>(defaultElement?: T, translator?: ((char: string) => T)) {
+export function MapFromInput<T>(
+  defaultElement?: T,
+  translator?: (char: string) => T
+) {
   return MapFromString(
     require("fs")
       .readFileSync((process.argv[2] || "input") + ".txt")
       .toString()
       .trim(),
     defaultElement,
-    translator,
-  )
+    translator
+  );
 }
