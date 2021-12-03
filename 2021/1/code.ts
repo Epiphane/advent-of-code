@@ -7,6 +7,21 @@ let raw = fs
 
 let asNumbers = raw.split("\n").map((line) => parseInt(line.trim()));
 
+// I'm very cool and clever
+console.log(
+  `Part 1: ${asNumbers.reduce(
+    (prev, n, i) => prev + (i > 0 && n > asNumbers[i - 1] ? 1 : 0),
+    0
+  )}`
+);
+
+console.log(
+  `Part 2: ${asNumbers.reduce(
+    (prev, n, i) => prev + (i > 2 && n > asNumbers[i - 3] ? 1 : 0),
+    0
+  )}`
+);
+
 // Original Solution
 // let result = 0;
 // let sum = asNumbers[0] + asNumbers[1] + asNumbers[2];
@@ -27,18 +42,3 @@ let asNumbers = raw.split("\n").map((line) => parseInt(line.trim()));
 //   sum = newsum;
 // }
 // print(result);
-
-// I'm very cool and clever
-console.log(
-  `Part 1: ${asNumbers.reduce(
-    (prev, n, i) => prev + (i > 0 && n > asNumbers[i - 1] ? 1 : 0),
-    0
-  )}`
-);
-
-console.log(
-  `Part 2: ${asNumbers.reduce(
-    (prev, n, i) => prev + (i > 2 && n > asNumbers[i - 3] ? 1 : 0),
-    0
-  )}`
-);
