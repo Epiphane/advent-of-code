@@ -38,6 +38,21 @@ export function gcd(x: number, y: number) {
   return x;
 }
 
+export function mode(list: number[]) {
+  let frequency: number[] = [];
+  let candidate = list[0];
+  list.forEach(v => {
+    frequency[v] = frequency[v] || 0;
+    frequency[v]++;
+
+    if (frequency[v] > frequency[candidate]) {
+      candidate = v;
+    }
+  });
+
+  return candidate;
+}
+
 export const id = (i) => i;
 
 export function Manhattan(p1: Point, p2: Point) {
