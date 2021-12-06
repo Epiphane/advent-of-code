@@ -1,5 +1,7 @@
 import { Point } from "./map";
 
+export const makeInt = (number: string) => parseInt(number);
+
 export function permute<T>(input: T[] | number) {
   if (typeof input === "number") {
     return permute(Array.from({ length: input }, (_, i) => i));
