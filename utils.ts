@@ -55,8 +55,12 @@ export function mode(list: number[]) {
   return candidate;
 }
 
-export const id = (i) => i;
+export const id = (i: any) => i;
 
 export function Manhattan(p1: Point, p2: Point) {
   return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
+}
+
+export function range(n: number) {
+  return Array.from(new Array(n), (_, k) => k);
 }
