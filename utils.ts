@@ -64,3 +64,8 @@ export function Manhattan(p1: Point, p2: Point) {
 export function range(n: number) {
   return Array.from(new Array(n), (_, k) => k);
 }
+
+export const ascending = (a: number, b: number) => a - b;
+export const descending = (a: number, b: number) => b - a;
+export const addAll = (prev: number, val: number) => prev + val;
+export const multiplyAll = (prev: number, val: number) => prev * val;

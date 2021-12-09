@@ -1,5 +1,5 @@
 import { Map, MapFromInput } from '../../map';
-import { makeInt, range } from '../../utils';
+import { ascending, makeInt, multiplyAll, range } from '../../utils';
 
 let height = MapFromInput(9, makeInt);
 let basinMap = new Map(0);
@@ -14,12 +14,7 @@ const queue: Node[] = [];
 function SetBasin(x: number, y: number, basin: number) {
     // Don't go out of bounds, and don't reassign
     // something that already has a basin
-    if (
-        x < height.min.x || x >= height.max.x ||
-        y < height.min.y || y >= height.max.y ||
-        basinMap.get(x, y) !== 0 ||
-        height.get(x, y) === 9
-    ) {
+    if (basinMap.get(x, y) !== 0 || height.get(x, y) === 9) {
         return;
     }
 
@@ -56,10 +51,10 @@ while (queue.length !== 0) {
 
 console.log(`Part 2`,
     range(basinId)
-        .map(basinId =>
-            basinMap.reduce((prev, id) => prev + (id === basinId ? 1 : 0), 0)
+        .map(basin =>
+            basinMap.reduce((prev, id) => prev + (id === basin ? 1 : 0), 0)
         )
-        .sort((a, b) => b - a)
-        .slice(0, 3)
-        .reduce((p, n) => p * n, 1)
+        .sort(ascending)
+        .slice(-3)
+        .reduce(multiplyAll, 1)
 );
