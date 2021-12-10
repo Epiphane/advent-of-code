@@ -1,193 +1,76 @@
 import * as fs from 'fs';
-import { Map, MapFromInput } from '../../map';
-// import { MakeGrid, MakeRow } from '../../makegrid.js';
-import { permute, gcd, lcm, makeInt, range, ascending } from '../../utils';
-import { question } from 'readline-sync';
-const md5 = require('../../md5');
-const print = console.log;
+import { ascending } from '../../utils';
 
 let file = process.argv[2] || 'input';
 let raw = fs.readFileSync(file + '.txt').toString().trim();
-
 let asLines = raw.split('\n').map(line => line.trim());
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
-let asNumberMap = MapFromInput(0, makeInt)
 
-console.log(asLines.reduce((prev, line) => {
-    const stack = [];
+function syntaxScore(line: string) {
+    const stack: string[] = [];
     for (let i = 0; i < line.length; i++) {
         const letter = line[i];
-
-        if (letter === '[') {
-            stack.push(letter);
-        }
-        else if (letter === '{') {
-            stack.push(letter);
-
-        }
-        else if (letter === '<') {
-            stack.push(letter);
-
-        }
-        else if (letter === '(') {
-            stack.push(letter);
-
-        }
-
-        else if (letter === ')') {
-            const l = stack.pop();
-            if (l !== '(') {
-                return prev + 3;
-            }
-        }
-        else if (letter === ']') {
-            const l = stack.pop();
-            if (l !== '[') {
-                return prev + 57;
-            }
-        }
-        else if (letter === '}') {
-            const l = stack.pop();
-            if (l !== '{') {
-                return prev + 1197;
-            }
-        }
-        else if (letter === '>') {
-            const l = stack.pop();
-            if (l !== '<') {
-                return prev + 25137;
-            }
-        }
-    }
-
-    return prev;
-}, 0))
-
-const good = asLines.filter((line) => {
-    const stack = [];
-    for (let i = 0; i < line.length; i++) {
-        const letter = line[i];
-
-        if (letter === '[') {
-            stack.push(letter);
-        }
-        else if (letter === '{') {
-            stack.push(letter);
-
-        }
-        else if (letter === '<') {
-            stack.push(letter);
-
-        }
-        else if (letter === '(') {
-            stack.push(letter);
-
-        }
-
-        else if (letter === ')') {
-            const l = stack.pop();
-            if (l !== '(') {
-                return false;
-            }
-        }
-        else if (letter === ']') {
-            const l = stack.pop();
-            if (l !== '[') {
-                return false;
-            }
-        }
-        else if (letter === '}') {
-            const l = stack.pop();
-            if (l !== '{') {
-                return false;
-            }
-        }
-        else if (letter === '>') {
-            const l = stack.pop();
-            if (l !== '<') {
-                return false;
-            }
-        }
-    }
-
-    return true;
-});
-
-const scores = good.map(line => {
-    const stack = [];
-    for (let i = 0; i < line.length; i++) {
-        const letter = line[i];
-
-        if (letter === '[') {
-            stack.push(letter);
-        }
-        else if (letter === '{') {
-            stack.push(letter);
-
-        }
-        else if (letter === '<') {
-            stack.push(letter);
-
-        }
-        else if (letter === '(') {
-            stack.push(letter);
-
-        }
-
-        else if (letter === ')') {
-            const l = stack.pop();
-            if (l !== '(') {
-                return false;
-            }
-        }
-        else if (letter === ']') {
-            const l = stack.pop();
-            if (l !== '[') {
-                return false;
-            }
-        }
-        else if (letter === '}') {
-            const l = stack.pop();
-            if (l !== '{') {
-                return false;
-            }
-        }
-        else if (letter === '>') {
-            const l = stack.pop();
-            if (l !== '<') {
-                return false;
-            }
-        }
-    }
-
-    let score = 0;
-    let completer = stack.reverse();
-
-    completer.forEach(l => {
-        switch (l) {
-            case '[':
-                score = score * 5 + 2;
-                break;
+        switch (letter) {
             case '(':
-                score = score * 5 + 1;
-                break;
+            case '[':
             case '{':
-                score = score * 5 + 3;
-                break;
             case '<':
-                score = score * 5 + 4;
+                stack.push(letter);
+                break;
+            case ')':
+                if (stack.pop() !== '(') return 3;
+                break;
+            case ']':
+                if (stack.pop() !== '[') return 57;
+                break;
+            case '}':
+                if (stack.pop() !== '{') return 1197;
+                break;
+            case '>':
+                if (stack.pop() !== '<') return 25137;
                 break;
         }
-    })
+    }
 
-    return score;
-})
+    return 0;
+}
 
-const asc = scores.sort(ascending);
-console.log(asc);
-console.log(asc.length);
-console.log(asc[Math.floor(asc.length / 2)]);
+function incompleteScore(line: string) {
+    const stack: string[] = [];
+    for (let i = 0; i < line.length; i++) {
+        const letter = line[i];
+        switch (letter) {
+            case '(':
+            case '[':
+            case '{':
+            case '<':
+                stack.push(letter);
+                break;
+            case ')':
+                if (stack.pop() !== '(') return 0;
+                break;
+            case ']':
+                if (stack.pop() !== '[') return 0;
+                break;
+            case '}':
+                if (stack.pop() !== '{') return 0;
+                break;
+            case '>':
+                if (stack.pop() !== '<') return 0;
+                break;
+        }
+    }
+
+    const values = {
+        '(': 1,
+        '[': 2,
+        '{': 3,
+        '<': 4,
+    };
+
+    return stack.reverse().reduce((prev, letter) => 5 * prev + values[letter], 0);
+}
+
+console.log(`Part 1`, asLines.reduce((prev, line) => prev + syntaxScore(line), 0))
+
+const incompletes = asLines.map(incompleteScore).filter(val => val !== 0).sort(ascending);
+console.log(`Part 2`, incompletes[Math.floor(incompletes.length / 2)]);
