@@ -34,6 +34,8 @@ function syntaxScore(line: string) {
     return 0;
 }
 
+console.log(`Part 1`, asLines.reduce((prev, line) => prev + syntaxScore(line), 0));
+
 function incompleteScore(line: string) {
     const stack: string[] = [];
     for (let i = 0; i < line.length; i++) {
@@ -69,8 +71,6 @@ function incompleteScore(line: string) {
 
     return stack.reverse().reduce((prev, letter) => 5 * prev + values[letter], 0);
 }
-
-console.log(`Part 1`, asLines.reduce((prev, line) => prev + syntaxScore(line), 0))
 
 const incompletes = asLines.map(incompleteScore).filter(val => val !== 0).sort(ascending);
 console.log(`Part 2`, incompletes[Math.floor(incompletes.length / 2)]);
