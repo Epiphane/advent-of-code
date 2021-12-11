@@ -73,4 +73,4 @@ function incompleteScore(line: string) {
 }
 
 const incompletes = asLines.map(incompleteScore).filter(val => val !== 0).sort(ascending);
-console.log(`Part 2`, incompletes[Math.floor(incompletes.length / 2)]);
+console.log(`Part 2`, incompletes[incompletes.length / 2 | 0]);
