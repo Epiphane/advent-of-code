@@ -10,7 +10,14 @@ export class Map<T> {
   min?: Point;
   max?: Point;
 
-  constructor(private readonly defaultValue?: T) {}
+  constructor(private readonly defaultValue?: T) { }
+
+  contains(x: number, y: number) {
+    return x >= this.min.x &&
+      x < this.max.x &&
+      y >= this.min.y &&
+      y < this.max.y;
+  }
 
   has(x: number, y: number) {
     return this.contents[y] && this.contents[y].hasOwnProperty(x);
@@ -116,6 +123,25 @@ export class Map<T> {
         }
 
         callback(this.get(x, y), x, y);
+      }
+    }
+  }
+
+  forNeighbors(
+    cx: number,
+    cy: number,
+    callack: (value: T, x: number, y: number) => void,
+    dist = 1,
+  ) {
+    for (let dx = -dist; dx <= dist; dx++) {
+      for (let dy = -dist; dy <= dist; dy++) {
+        if (dx === 0 && dy === 0) continue;
+
+        const x = cx + dx;
+        const y = cy + dy;
+        if (this.contains(x, y)) {
+          callack(this.get(x, y), x, y);
+        }
       }
     }
   }
