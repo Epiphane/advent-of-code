@@ -127,6 +127,34 @@ export class Map<T> {
     }
   }
 
+  forAdjacent(
+    cx: number,
+    cy: number,
+    callback: (value: T, x: number, y: number) => void,
+    diagonal = false
+  ) {
+    if (diagonal) {
+      this.forNeighbors(cx, cy, callback, 1);
+    }
+    else {
+      if (this.contains(cx - 1, cy)) {
+        callback(this.get(cx - 1, cy), cx - 1, cy);
+      }
+
+      if (this.contains(cx + 1, cy)) {
+        callback(this.get(cx + 1, cy), cx + 1, cy);
+      }
+
+      if (this.contains(cx, cy - 1)) {
+        callback(this.get(cx, cy - 1), cx, cy - 1);
+      }
+
+      if (this.contains(cx, cy + 1)) {
+        callback(this.get(cx, cy + 1), cx, cy + 1);
+      }
+    }
+  }
+
   forNeighbors(
     cx: number,
     cy: number,
