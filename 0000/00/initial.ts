@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import { Map, MapFromInput } from '../../map';
-// import { MakeGrid, MakeRow } from '../../makegrid.js';
 import { permute, gcd, lcm, makeInt, range } from '../../utils';
 import { question } from 'readline-sync';
 const md5 = require('../../md5');

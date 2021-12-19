@@ -48,6 +48,7 @@ class SnailNum {
   }
 
   explode() {
+    console.log(' -> explode', this.toString());
     let cursor = this.parent;
     let me: SnailNum = this;
     while (cursor && cursor.left === me) {
@@ -78,6 +79,7 @@ class SnailNum {
   }
 
   split() {
+    console.log(' -> split', this.toString());
     this.left = new SnailNum();
     this.left.parent = this;
     this.left.value = Math.floor(this.value / 2);
@@ -85,7 +87,6 @@ class SnailNum {
     this.right.parent = this;
     this.right.value = Math.ceil(this.value / 2);
     this.value = undefined;
-    // this.left.depth;
   }
 
   reduce1() {
@@ -96,7 +97,6 @@ class SnailNum {
       this.right.value != undefined &&
       this.parent?.parent?.parent?.parent
     ) {
-      //   console.log("  explode", this.toString());
       this.explode();
       return true;
     }
@@ -115,7 +115,6 @@ class SnailNum {
 
   reduce2() {
     if (this.value && this.value >= 10) {
-      //   console.log("  split", this.toString());
       this.split();
       return true;
     }
@@ -163,7 +162,7 @@ class SnailNum {
     result.left.parent = result;
     result.right.parent = result;
     while (result.reduce()) {
-      //   print(result.toString());
+      print(result.toString());
     }
     return result;
   }
@@ -214,78 +213,26 @@ asLines.forEach((line) => {
   numbers.push(ToSnailNum(parsed));
 });
 
-// console.log(asLines[1]);
-// console.log(numbers[1].left.left.left.left);
-// console.log(numbers[1].left.left.left.left.parent?.parent?.parent?.parent);
-
-// let num = ToSnailNum([
-//   [[[4, 3], 4], 4],
-//   [7, [[8, 4], 9]],
-// ]);
-// let num2 = ToSnailNum([1, 1]);
-// num = num.add(num2);
-// console.log(num.toString());
-// console.log(num2.toString());
-// console.log(num.reduce());
-// console.log(num.toString());
-// console.log(num.reduce());
-// console.log(num.toString());
-// console.log(num.reduce());
-// console.log(num.toString());
-// console.log(num.reduce());
-// console.log(num.toString());
-// console.log(num.reduce());
-// console.log(num.toString());
-
-// let n1 = ToSnailNum([
-//   [
-//     [0, [4, 5]],
-//     [0, 0],
-//   ],
-//   [
-//     [
-//       [4, 5],
-//       [2, 6],
-//     ],
-//     [9, 5],
-//   ],
-// ]);
-// let n2 = ToSnailNum([
-//   7,
-//   [
-//     [
-//       [3, 7],
-//       [4, 3],
-//     ],
-//     [
-//       [6, 3],
-//       [8, 8],
-//     ],
-//   ],
-// ]);
-// print(n1.add(n2).toString());
-
 let original = numbers[0].clone();
 numbers.forEach((n, i) => {
   if (i === 0) return;
+  console.log(`\n---- Adding ${original.toString()} + ${n.toString()} ----`)
   original = original.add(n);
+  console.log(`Result: ${original.toString()}`);
 });
 
-print(original.toString());
-print(original.magnitude());
+// print(original.toString());
+// print(original.magnitude());
 
-let result = 0;
-numbers.forEach((n1, i) => {
-  numbers.forEach((n2, j) => {
-    if (i === j) return;
-    const m1 = n1.add(n2);
-    if (m1.magnitude() > result) {
-      result = m1.magnitude();
-      console.log(m1.toString(), result, console.log(n2.add(n1).magnitude()));
-    }
-  });
-});
-console.log(result);
-
-// console.log(numbers[0]);
-// console.log(numbers[0].clone());
+// let result = 0;
+// numbers.forEach((n1, i) => {
+//   numbers.forEach((n2, j) => {
+//     if (i === j) return;
+//     const m1 = n1.add(n2);
+//     if (m1.magnitude() > result) {
+//       result = m1.magnitude();
+//       console.log(m1.toString(), result, console.log(n2.add(n1).magnitude()));
+//     }
+//   });
+// });
+// console.log(result);
