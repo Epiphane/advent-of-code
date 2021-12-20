@@ -1,52 +1,47 @@
 import * as fs from 'fs';
-import { Map, MapFromInput, MapFromString } from '../../map';
-import { permute, gcd, lcm, makeInt, range } from '../../utils';
-import { question } from 'readline-sync';
-const md5 = require('../../md5');
-const print = console.log;
+import { Map, MapFromString } from '../../map';
+import { Point } from '../../point';
+import { addAll, range } from '../../utils';
 
-let file = process.argv[2] || 'input';
-let raw = fs.readFileSync(file + '.txt').toString().trim();
+const file = process.argv[2] || 'input';
+const raw = fs.readFileSync(file + '.txt').toString().trim();
+const groups = raw.split(/\r?\n\r?\n/).map(line => line.trim());
 
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
+const ToNumber = (v: string) => ['.', '#'].indexOf(v);
+const lookup = groups[0].split('').map(ToNumber);
+const inputImage = MapFromString(groups[1]).map(ToNumber);
 
-const algorithm = asGroups[0][0].split('');
-asMap = MapFromString(asGroups[1].join('\n'));
+const isFlipping = (lookup[0] === 1);
+if (isFlipping && lookup[511] === 1) {
+    throw 'Bad input ya jangus';
+}
 
-let allLit = false;
-function apply(img: Map<string>) {
-    const image = new Map(img.defaultValue === '#' ? '.' : '#');
-    for (let x = img.min.x - 1; x < img.max.x + 1; x++) {
-        for (let y = img.min.y - 1; y < img.max.y + 1; y++) {
-            let str = [
-                img.get(x - 1, y - 1),
-                img.get(x, y - 1),
-                img.get(x + 1, y - 1),
-                img.get(x - 1, y),
-                img.get(x, y),
-                img.get(x + 1, y),
-                img.get(x - 1, y + 1),
-                img.get(x, y + 1),
-                img.get(x + 1, y + 1),
-            ];
-            const strin = str.map(v => v === '#' ? 1 : 0).join('');
-            const num = parseInt(strin, 2);
+function enhance(img: Map<number>) {
+    const image = new Map(isFlipping ? 1 - img.defaultValue : img.defaultValue);
+    image.min = img.min.sub(new Point(1, 1));
+    image.max = img.max.add(new Point(1, 1));
+    image.forEach((_, x, y) => {
+        image.set(x, y, lookup[parseInt([
+            img.get(x - 1, y - 1),
+            img.get(x + 0, y - 1),
+            img.get(x + 1, y - 1),
+            img.get(x - 1, y + 0),
+            img.get(x + 0, y + 0),
+            img.get(x + 1, y + 0),
+            img.get(x - 1, y + 1),
+            img.get(x + 0, y + 1),
+            img.get(x + 1, y + 1),
+        ].join(''), 2)]);
+    }, true)
 
-            const alg = algorithm[num];
-            image.set(x, y, alg);
-        }
-    }
-
-    allLit = !allLit;
     return image;
 }
 
-range(50).forEach((i) => {
-    console.log(i);
-    asMap = apply(asMap);
-});
+let image = new Map(0);
+inputImage.forEach((v, x, y) => image.set(x, y, v));
 
-console.log(asMap.reduce((prev, i) => prev + (i === '#' ? 1 : 0), 0));
+range(2).forEach(() => image = enhance(image));
+console.log(`Part 1`, image.reduce(addAll, 0));
+
+range(48).forEach(() => image = enhance(image));
+console.log(`Part 2`, image.reduce(addAll, 0));
