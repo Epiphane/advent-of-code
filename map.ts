@@ -10,7 +10,7 @@ export class Map<T> {
   min?: Point;
   max?: Point;
 
-  constructor(private readonly defaultValue?: T) { }
+  constructor(public readonly defaultValue?: T) { }
 
   contains(x: number, y: number) {
     return x >= this.min.x &&
@@ -102,6 +102,12 @@ export class Map<T> {
     return rows
       .map((row) => row.map((val) => val.padEnd(maxSize)).join(colDelimiter))
       .join(rowDelimiter);
+  }
+
+  clip(minX, minY, maxX, maxY) {
+    const result = new Map<T>(this.defaultValue);
+
+
   }
 
   forEach(

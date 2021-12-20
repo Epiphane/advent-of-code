@@ -98,34 +98,18 @@ function FindTranslation(base: Point[], options: Point[]) {
             const optionOrigin = options[j];
             const offset = baseOrigin.sub(optionOrigin);
 
-            const matches: Point[] = [];
-            const yay: Point[] = [];
-            const nay: Point[] = [];
+            let matches = 0;
             for (let z = 0; z < options.length; z++) {
                 const point = options[z].add(offset);
                 if (exists[point.x ^ point.y ^ point.z]) {
-                    matches.push(point);
-                    yay.push(options[z]);
-
-                    if (matches.length >= 12) {
-                        // return offset;
+                    if (++matches >= 12) {
+                        return offset;
                     }
                 }
-                else {
-                    nay.push(options[z]);
-                }
-            }
-
-            if (matches.length >= 12) {
-                // console.log(yay, nay)
-                return offset;
             }
         }
     }
 }
-
-// scanners[0].reoriented[0].forEach(({ x, y, z }) => exists[x ^ y ^ z] = true);
-// console.log(FindTranslation(scanners[0].reoriented[0], scanners[1].reoriented[5]))
 
 // Use the 0th scanner as a frame of reference.
 scanners[0].pos = new Point(0, 0, 0);
