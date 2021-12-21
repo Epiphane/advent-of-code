@@ -1,220 +1,73 @@
 import * as fs from 'fs';
-import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range, addAll } from '../../utils';
-import { question } from 'readline-sync';
-import { Point } from '../../point';
-const md5 = require('../../md5');
-const print = console.log;
+import { makeInt, range } from '../../utils';
 
-let file = process.argv[2] || 'input';
-let raw = fs.readFileSync(file + '.txt').toString().trim();
+const file = process.argv[2] || 'input';
+const raw = fs.readFileSync(file + '.txt').toString().trim();
+const initialSpots = raw.split('\n')
+    .map(line => line.match(/position: (\d+)/)[1])
+    .map(makeInt)
+    .map(pos => pos - 1);
 
-let asLines = raw.split('\n').map(line => line.trim());
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
-let asNumberMap = MapFromInput(0, makeInt)
-
-let spot = [7, 8];
-let p1 = 8
-let p2 = 9;
-
-let score = [0, 0];
-let p1s = 0;
-let p2s = 0;
-
-let next = 99;
-let nRolls = 0;
-function roll() {
-    nRolls++;
-    next = (next + 1) % 100;
-    return next + 1;
+let Part1Rolls = 0;
+function RollPart1() {
+    return (Part1Rolls++ % 100) + 1;
 }
 
-let turn = 0;
+function TakeTurnPart1(turn: number, positions: number[], scores: number[]) {
+    positions[turn] = (positions[turn] + RollPart1() + RollPart1() + RollPart1()) % 10;
+    scores[turn] += positions[turn] + 1;
+    return scores[turn] < 1000;
+}
 
-let scoreMap = [
-    new Map(0),
-    new Map(0),
-];
-scoreMap[0].set(0, 0, 1);
+function PlayGamePart1(initial: number[]) {
+    const positions = [...initial];
+    const scores = [0, 0];
+    let turn = 0;
+    Part1Rolls = 0;
+    while (TakeTurnPart1(turn, positions, scores)) {
+        turn = 1 - turn;
+    }
 
-let states = {};
+    return Part1Rolls * scores[1 - turn];
+}
 
-function encode(spots: [number, number], score: [number, number], turn: number) {
+console.log(`Part 1`, PlayGamePart1(initialSpots));
+
+// Map from (# rolled) to (# ways to roll it). For example,
+// universes[4] = 3 because 1,1,2, 1,2,1, 2,1,1 can all make 4.
+const universes = [0, 0, 0, 1, 3, 6, 7, 6, 3, 1,]
+
+function encode(spots: number[], score: number[], turn: number) {
     return [...spots, ...score, turn].join(',');
 }
 
-function decode(state: string) {
-    const [sp0, sp1, sc0, sc1, turn] = state.split(',').map(makeInt);
-    return {
-        spots: [sp0, sp1],
-        score: [sc0, sc1],
-        turn,
-    }
-}
-
-const initial = encode([0, 0], [0, 0], 0);
-let queue = [decode(initial)];
-states[initial] = 1;
-
-const results = {} as { [key: string]: [number, number] };
-
-const options = [
-    1 + 1 + 1,
-    1 + 1 + 2,
-    1 + 1 + 3,
-    1 + 2 + 1,
-    1 + 2 + 2,
-    1 + 2 + 3,
-    1 + 3 + 1,
-    1 + 3 + 2,
-    1 + 3 + 3,
-
-    2 + 1 + 1,
-    2 + 1 + 2,
-    2 + 1 + 3,
-    2 + 2 + 1,
-    2 + 2 + 2,
-    2 + 2 + 3,
-    2 + 3 + 1,
-    2 + 3 + 2,
-    2 + 3 + 3,
-
-    3 + 1 + 1,
-    3 + 1 + 2,
-    3 + 1 + 3,
-    3 + 2 + 1,
-    3 + 2 + 2,
-    3 + 2 + 3,
-    3 + 3 + 1,
-    3 + 3 + 2,
-    3 + 3 + 3,
-]
-const counts = range(10).map(n => options.filter(i => i === n).length);
-// console.log(counts);
-
-let it = 0;
-function Test(spots: [number, number], score: [number, number], turn: number) {
-    const encoded = encode(spots, score, turn);
+const results = {} as { [key: string]: number[] };
+function TakeTurnPart2(turn: number, positions: number[], scores: number[]) {
+    const encoded = encode(positions, scores, turn);
 
     if (results[encoded]) {
         return results[encoded];
     }
 
-    if (score[0] >= 21) {
-        return results[encoded] = [1, 0];
-    }
-    if (score[1] >= 21) {
-        return results[encoded] = [0, 1];
-    }
+    return results[encoded] = universes.reduce((result: number[], times, value) => {
+        if (times === 0) return result;
 
-    const result = [0, 0];
-    counts.forEach((times, value) => {
-        if (times === 0) return;
+        let newPositions = [...positions];
+        let newScore = [...scores];
+        newPositions[turn] = (newPositions[turn] + value) % 10;
+        newScore[turn] += (newPositions[turn] + 1);
 
-        let newSpots = [...spots] as [number, number];
-        let newScore = [...score] as [number, number];
-        newSpots[turn] = (newSpots[turn] + value) % 10;
-        newScore[turn] += (newSpots[turn] + 1);
-        if (it++ % 1000 === 0) console.log(value, times, spots, newSpots, score, newScore, turn);
-
-        const subresult = Test(newSpots, newScore, 1 - turn);
-        result[0] += times * subresult[0];
-        result[1] += times * subresult[1];
-    })
-
-    return results[encoded] = result as [number, number];
-}
-
-const output = Test([7, 8], [0, 0], 0);
-console.log(output);
-console.log(Math.min(...output))
-console.log(results['7,8,0,0,0']);
-
-/*
-while (queue.length) {
-    // const {spots, score, turn} = queue.shift();
-
-    // // 1
-    // const v1Spots = [...spots];
-    // const v1Scores = [...score];
-    // spots[turn] = (sp)
-
-    const { x, y, turn } = queue.shift();
-    const nGames = scoreMap[turn].get(x, y);
-
-    // 1
-    const options = [
-        1 + 1 + 1,
-        1 + 1 + 2,
-        1 + 1 + 3,
-        1 + 2 + 1,
-        1 + 2 + 2,
-        1 + 2 + 3,
-        1 + 3 + 1,
-        1 + 3 + 2,
-        1 + 3 + 3,
-
-        2 + 1 + 1,
-        2 + 1 + 2,
-        2 + 1 + 3,
-        2 + 2 + 1,
-        2 + 2 + 2,
-        2 + 2 + 3,
-        2 + 3 + 1,
-        2 + 3 + 2,
-        2 + 3 + 3,
-
-        3 + 1 + 1,
-        3 + 1 + 2,
-        3 + 1 + 3,
-        3 + 2 + 1,
-        3 + 2 + 2,
-        3 + 2 + 3,
-        3 + 3 + 1,
-        3 + 3 + 2,
-        3 + 3 + 3,
-    ]
-    const counts = range(10).map(n => options.filter(i => i === n).length);
-    counts.forEach((value, times) => {
-        const encoded = `${}`
-
-        if (turn === 0) {
-            let newSpot =
-                scoreMap.set(x + value, y)
+        if (newScore[turn] >= 21) {
+            result[turn] += times;
         }
-    })
+        else {
+            TakeTurnPart2(1 - turn, newPositions, newScore).forEach((val, i) =>
+                result[i] += times * val
+            );
+        }
+
+        return result;
+    }, [0, 0]);
 }
 
-function takeTurn() {
-    let rolls = [
-        roll(),
-        roll(),
-        roll(),
-    ];
-
-    let add = rolls.reduce(addAll, 0);
-    let nextSpot = spot[turn] + add;
-    nextSpot = nextSpot % 10;
-    spot[turn] = nextSpot;
-    score[turn] += (nextSpot + 1);
-
-    // console.log(turn, rolls, nextSpot + 1, score[turn]);
-    // if (nRolls > 10) return false;
-    if (score[turn] >= 1000) {
-        console.log(score[1 - turn]);
-        console.log(nRolls);
-        console.log(score[1 - turn] * nRolls);
-        return false;
-    }
-
-    turn = 1 - turn;
-    return true;
-}
-
-while (takeTurn()) { }
-
-*/
+console.log(`Part 2`, Math.max(...TakeTurnPart2(0, initialSpots, [0, 0])));
