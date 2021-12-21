@@ -1,16 +1,12 @@
+import { Point } from "./point";
 import { id } from "./utils";
-
-export interface Point {
-  x: number;
-  y: number;
-}
 
 export class Map<T> {
   contents: T[][] = [];
   min?: Point;
   max?: Point;
 
-  constructor(public readonly defaultValue?: T) { }
+  constructor(public defaultValue?: T) { }
 
   contains(x: number, y: number) {
     return x >= this.min.x &&
@@ -33,8 +29,8 @@ export class Map<T> {
 
   set(x: number, y: number, value: T) {
     if (!this.min || !this.max) {
-      this.min = { x, y };
-      this.max = { x: x + 1, y: y + 1 };
+      this.min = new Point(x, y);
+      this.max = new Point(x + 1, y + 1);
     }
 
     this.contents[y] = this.contents[y] || [];
@@ -104,10 +100,16 @@ export class Map<T> {
       .join(rowDelimiter);
   }
 
-  clip(minX, minY, maxX, maxY) {
+  clip(minX: number, minY: number, width?: number, height?: number) {
     const result = new Map<T>(this.defaultValue);
 
+    for (let y = minY; y < minY + height; ++y) {
+      for (let x = minX; x < minX + width; ++x) {
+        result.set(x, y, this.get(x, y));
+      }
+    }
 
+    return result;
   }
 
   forEach(
@@ -124,7 +126,7 @@ export class Map<T> {
       }
 
       for (let x = this.min.x; x < this.max.x; ++x) {
-        if (!this.contents[y].hasOwnProperty(x) && !includeUndefined) {
+        if ((!this.contents[y] || !this.contents[y].hasOwnProperty(x)) && !includeUndefined) {
           continue;
         }
 
