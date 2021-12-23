@@ -1,753 +1,185 @@
-import * as fs from 'fs';
-import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range, id } from '../../utils';
-import { question } from 'readline-sync';
-const md5 = require('../../md5');
-const print = console.log;
+import { MapFromInput } from '../../map';
+import { range, deepCopy, BinaryInsert } from '../../utils';
 
-let file = process.argv[2] || 'input';
-let raw = fs.readFileSync(file + '.txt').toString().trim();
+const energy = [0, 1, 10, 100, 1000];
 
-let asLines = raw.split('\n');
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
-let asNumberMap = MapFromInput(0, makeInt)
+function toChar(num: number) {
+    return ['.', 'A', 'B', 'C', 'D'][num];
+}
 
-const energy = {
-    A: 1,
-    B: 10,
-    C: 100,
-    D: 1000
-};
+function fromChar(char: string) {
+    return ['.', 'A', 'B', 'C', 'D'].indexOf(char);
+}
 
 class State {
-    rooms: [string, string, string, string][] = [
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-    ];
+    rooms = range(4).map(() => [] as number[]);
+    hall = range(11).map(() => 0);
+    spent = 0;
 
-    // Room 0 goes to hall[2]
-    // Room 1 goes to hall[4]
-    // Room 2 goes to hall[6]
-    // Room 3 goes to hall[8]
-    hall: string[] = range(11).map(() => '.');
-
-    serialize() {
-        return this.rooms.map(r => r.join()).join() + `|` + this.hall.join();
-    }
-
-    sorted() {
-        return this.rooms[0].filter(i => i === 'A').length === 4 &&
-            this.rooms[1].filter(i => i === 'B').length === 4 &&
-            this.rooms[2].filter(i => i === 'C').length === 4 &&
-            this.rooms[3].filter(i => i === 'D').length === 4;
+    isComplete() {
+        return this.rooms.every((room, num) => room.every(occ => occ === num + 1));
     }
 
     clone() {
         const state = new State();
-        state.rooms = this.rooms.map(r => r.map(id)) as [string, string, string, string][];
-        state.hall = this.hall.map(id);
+        state.hall = this.hall.map(deepCopy);
+        state.rooms = this.rooms.map(deepCopy);
         state.spent = this.spent;
         return state;
     }
 
-    possibilities() {
-        if (this.rooms[0][0] !== 'A' && this.rooms[0][0] !== '.') {
-
-        }
-    }
-
-    spent = 0;
-
-    points() {
-        return this.rooms[0].filter(i => i === 'A').length +
-            this.rooms[1].filter(i => i === 'B').length +
-            this.rooms[2].filter(i => i === 'C').length +
-            this.rooms[3].filter(i => i === 'D').length;
-    }
-
-    dist() {
-        let dist = 0;
-        this.hall.forEach((occ, i) => {
-            if (occ === '.') return;
-
-
-        })
+    serialize() {
+        let id = 0;
+        this.hall.forEach(v => id = id * 5 + v);
+        this.rooms.forEach(room => room.forEach(v => id = id * 5 + v));
+        return id;
     }
 
     toString() {
-        return `(${this.spent})
-#############
-#${this.hall.join('')}#
-###${this.rooms[0][0]}#${this.rooms[1][0]}#${this.rooms[2][0]}#${this.rooms[3][0]}###
-  #${this.rooms[0][1]}#${this.rooms[1][1]}#${this.rooms[2][1]}#${this.rooms[3][1]}#
-  #${this.rooms[0][2]}#${this.rooms[1][2]}#${this.rooms[2][2]}#${this.rooms[3][2]}#
-  #${this.rooms[0][3]}#${this.rooms[1][3]}#${this.rooms[2][3]}#${this.rooms[3][3]}#
-  #########
-`;
+        return [
+            `Spent: (${this.spent})`,
+            `#############`,
+            `#${this.hall.map(toChar).join('')}#`,
+            ...this.rooms[0].map((_, depth) => {
+                const pad = ['##'][depth] ?? '  ';
+                return [pad, ...this.rooms.map(room => toChar(room[depth])), pad].join('#')
+            }),
+            `  #########`,
+        ].join('\n');
     }
 }
 
-let best = Infinity;
+function solve(initial: State) {
+    const best: { [key: string]: number } = {};
 
-const calculating: { [key: string]: boolean } = {};
-
-const initial = new State();
-initial.rooms[0][0] = asLines[2][3];
-initial.rooms[0][1] = asLines[3][3];
-initial.rooms[0][2] = asLines[4][3];
-initial.rooms[0][3] = asLines[5][3];
-
-initial.rooms[1][0] = asLines[2][5];
-initial.rooms[1][1] = asLines[3][5];
-initial.rooms[1][2] = asLines[4][5];
-initial.rooms[1][3] = asLines[5][5];
-
-initial.rooms[2][0] = asLines[2][7];
-initial.rooms[2][1] = asLines[3][7];
-initial.rooms[2][2] = asLines[4][7];
-initial.rooms[2][3] = asLines[5][7];
-
-initial.rooms[3][0] = asLines[2][9];
-initial.rooms[3][1] = asLines[3][9];
-initial.rooms[3][2] = asLines[4][9];
-initial.rooms[3][3] = asLines[5][9];
-
-console.log(initial.toString());
-
-const cache: { [key: string]: number } = {};
-
-let queue: State[] = [initial];
-function TryAddQueue(state: State) {
-    const serial = state.serialize();
-    if (cache[serial] && cache[serial] <= state.spent) {
-        return;
-    }
-
-    cache[serial] = state.spent;
-    if (isNaN(state.spent) || state.spent < 0) {
-        console.trace();
-        throw 'a';
-    }
-    const st = state.toString();
-    if (st.indexOf('A') < 0 || st.indexOf('B') < 0 || st.indexOf('C') < 0 || st.indexOf('D') < 0) {
-        console.log(st);
-        console.trace();
-        throw 'b';
-    }
-    // console.log(state.toString());
-    queue.push(state);
-}
-
-// console.log(initial.toString());
-// console.log(initial.rooms[1].filter(i => i !== '.' && i !== 'B'));
-
-let i__ = 0;
-
-let int = setInterval(() => {
-    console.log(i__, 'queue', queue.length, curState.toString());
-}, 500)
-
-let curState = queue[0];
-while (queue.length > 0) {
-    const state = queue.shift();
-    curState = state;
-
-    i__++
-    // if (i__ % 100 === 0) {
-    if (i__ === 47001) console.log(i__, 'queue', queue.length, state.toString());
-    // console.log(state.toString());
-    // }
-
-    // console.log(state.toString());
-
-    if (state.sorted()) {
-        console.log(state.spent);
-        // console.log(state.toString());
-        best = Math.min(best, state.spent);
-        console.log(best);
-        continue;
-    }
-
-    if (state.spent > best) {
-        continue;
-    }
-
-    // const serialized = state.serialize();
-    // if (cache[serialized]) {
-    //     return cache[serialized];
-    // }
-
-    // if (state.sorted()) {
-    //     return cache[serialized] = 0;
-    // }
-
-    // Don't redo
-    // if (calculating[serialized]) {
-    //     return Infinity;
-    // }
-
-    // Get out of the depths
-    const Occupant = ['A', 'B', 'C', 'D']
-    const RoomOpen =
-        state.rooms.map((room, r) => room.filter(i => !['.', Occupant[r]].includes(i)).length === 0);
-
-    RoomOpen.forEach((isOpen, roomNum) => {
-        if (isOpen) {
+    let queue: State[] = [initial];
+    function TryAddQueue(state: State) {
+        const serial = state.serialize();
+        if (best[serial] && best[serial] <= state.spent) {
             return;
         }
 
-        const room = state.rooms[roomNum];
+        best[serial] = state.spent;
+        BinaryInsert(queue, state, 'spent');
+    }
 
-        for (let i = 0; i < room.length; i++) {
-            if (room[i] === '.') {
-                continue;
-            }
+    while (queue.length > 0) {
+        const state = queue.shift();
 
-            const exitDist = i + 1;
-            const door = 2 * (roomNum + 1);
-            [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                if (hall < door) {
-                    for (let i = hall; i <= door; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[roomNum][i];
-                    option.rooms[roomNum][i] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (door - hall + exitDist);
-                    TryAddQueue(option);
-                }
-                else {
-                    for (let i = door; i <= hall; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[roomNum][i];
-                    option.rooms[roomNum][i] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (hall - door + exitDist);
-                    TryAddQueue(option);
-                }
-            });
-
-            break;
+        if (state.isComplete()) {
+            return state.spent;
         }
-    })
 
-    if (i__ === 47001) console.log('a');
+        const RoomOpen =
+            state.rooms.map((room, num) => room.every(occ => !occ || occ === num + 1));
 
-    /*
-    if (!RoomOpen[0])
-        if (state.rooms[0][0] !== '.' && (state.rooms[0][0] !== 'A' || state.rooms[0][1] !== 'A')) {
-            const door = 2;
-            [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                if (hall < door) {
-                    for (let i = hall; i <= door; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    // console.log('---');
-                    // console.log(state.toString(), option.toString());
-                    const occupant = option.rooms[0][0];
-                    option.rooms[0][0] = '.';
-                    option.hall[hall] = occupant;
-                    // for (let i = hall; i <= door; i++) {
-                    // console.log(i, state.hall[i]);
-                    // }
-                    // console.log(occupant, hall, option.toString());
-                    // console.log('---');
-                    option.spent += energy[occupant] * (door - hall + 1 )
-                    TryAddQueue(option);
-                }
-                else {
-                    for (let i = door; i <= hall; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[0][0];
-                    option.rooms[0][0] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (hall - door + 1 )
-                    TryAddQueue(option);
-                }
-            });
-        }
-    if (state.rooms[0][1] !== '.' && state.rooms[0][1] !== 'A') {
-        if (state.rooms[0][0] === '.') {
-            const door = 2;
-            [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                if (hall < door) {
-                    for (let i = hall; i <= door; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[0][1];
-                    option.rooms[0][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (door - hall + 2 )
-                    TryAddQueue(option);
-                }
-                else {
-                    for (let i = door; i <= hall; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[0][1];
-                    option.rooms[0][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (hall - door + 2 )
-                    TryAddQueue(option);
-                }
-            });
-        }
-    }
-
-    // Room 2
-    if (state.rooms[1][0] !== '.' && (state.rooms[1][0] !== 'B' || state.rooms[1][1] !== 'B')) {
-        const door = 4;
-        [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-            if (hall < door) {
-                for (let i = hall; i <= door; i++) {
-                    if (state.hall[i] !== '.') {
-                        return;
-                    }
-                }
-
-                // option!
-                const option = state.clone();
-                const occupant = option.rooms[1][0];
-                option.rooms[1][0] = '.';
-                option.hall[hall] = occupant;
-                option.spent += energy[occupant] * (door - hall + 1 )
-                TryAddQueue(option);
+        RoomOpen.forEach((isOpen, roomNum) => {
+            if (isOpen) {
+                return;
             }
-            else {
-                for (let i = door; i <= hall; i++) {
-                    if (state.hall[i] !== '.') {
-                        return;
-                    }
+
+            const room = state.rooms[roomNum];
+
+            for (let i = 0; i < room.length; i++) {
+                if (room[i] === 0) {
+                    continue;
                 }
 
-                // option!
-                const option = state.clone();
-                const occupant = option.rooms[1][0];
-                option.rooms[1][0] = '.';
-                option.hall[hall] = occupant;
-                option.spent += energy[occupant] * (hall - door + 1 )
-                TryAddQueue(option);
-            }
-        });
-    }
-    if (state.rooms[1][1] !== '.' && state.rooms[1][1] !== 'B') {
-        if (state.rooms[1][0] === '.') {
-            const door = 4;
-            [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                if (hall < door) {
-                    for (let i = hall; i <= door; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
+                const exitDist = i + 1;
+                const door = 2 * (roomNum + 1);
+                [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
+                    if (hall < door) {
+                        for (let i = hall; i <= door; i++) {
+                            if (state.hall[i]) {
+                                return;
+                            }
                         }
-                    }
 
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[1][1];
-                    option.rooms[1][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (door - hall + 2 )
-                    TryAddQueue(option);
-                }
-                else {
-                    for (let i = door; i <= hall; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
+                        const option = state.clone();
+                        const occupant = option.rooms[roomNum][i];
+                        option.rooms[roomNum][i] = 0;
+                        option.hall[hall] = occupant;
+                        option.spent += energy[occupant] * (door - hall + exitDist);
+                        TryAddQueue(option);
+                    }
+                    else {
+                        for (let i = door; i <= hall; i++) {
+                            if (state.hall[i]) {
+                                return;
+                            }
                         }
+
+                        const option = state.clone();
+                        const occupant = option.rooms[roomNum][i];
+                        option.rooms[roomNum][i] = 0;
+                        option.hall[hall] = occupant;
+                        option.spent += energy[occupant] * (hall - door + exitDist);
+                        TryAddQueue(option);
                     }
+                });
 
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[1][1];
-                    option.rooms[1][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (hall - door + 2 )
-                    TryAddQueue(option);
-                }
-            });
-        }
-    }
-
-    // Room 3
-    if (state.rooms[2][0] !== '.' && (state.rooms[2][0] !== 'C' || state.rooms[2][1] !== 'C')) {
-        const door = 6;
-        [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-            if (hall < door) {
-                for (let i = hall; i <= door; i++) {
-                    if (state.hall[i] !== '.') {
-                        return;
-                    }
-                }
-
-                // option!
-                const option = state.clone();
-                const occupant = option.rooms[2][0];
-                option.rooms[2][0] = '.';
-                option.hall[hall] = occupant;
-                option.spent += energy[occupant] * (door - hall + 1 )
-                TryAddQueue(option);
-            }
-            else {
-                for (let i = door; i <= hall; i++) {
-                    if (state.hall[i] !== '.') {
-                        return;
-                    }
-                }
-
-                // option!
-                const option = state.clone();
-                const occupant = option.rooms[2][0];
-                option.rooms[2][0] = '.';
-                option.hall[hall] = occupant;
-                option.spent += energy[occupant] * (hall - door + 1 )
-                TryAddQueue(option);
-            }
-        });
-    }
-    if (state.rooms[2][1] !== '.' && state.rooms[2][1] !== 'C') {
-        if (state.rooms[2][0] === '.') {
-            const door = 6;
-            [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                if (hall < door) {
-                    for (let i = hall; i <= door; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[2][1];
-                    option.rooms[2][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (door - hall + 2 )
-                    TryAddQueue(option);
-                }
-                else {
-                    for (let i = door; i <= hall; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[2][1];
-                    option.rooms[2][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (hall - door + 2 )
-                    TryAddQueue(option);
-                }
-            });
-        }
-    }
-
-    // Room 4
-    if (state.rooms[3][0] !== '.' && (state.rooms[3][0] !== 'D' || state.rooms[3][1] !== 'D')) {
-        const door = 8;
-        [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-            if (hall < door) {
-                for (let i = hall; i <= door; i++) {
-                    if (state.hall[i] !== '.') {
-                        return;
-                    }
-                }
-
-                // option!
-                const option = state.clone();
-                const occupant = option.rooms[3][0];
-                option.rooms[3][0] = '.';
-                option.hall[hall] = occupant;
-                option.spent += energy[occupant] * (door - hall + 1 )
-                TryAddQueue(option);
-            }
-            else {
-                for (let i = door; i <= hall; i++) {
-                    if (state.hall[i] !== '.') {
-                        return;
-                    }
-                }
-
-                // option!
-                const option = state.clone();
-                const occupant = option.rooms[3][0];
-                option.rooms[3][0] = '.';
-                option.hall[hall] = occupant;
-                option.spent += energy[occupant] * (hall - door + 1 )
-                TryAddQueue(option);
-            }
-        });
-    }
-    if (state.rooms[3][1] !== '.' && state.rooms[3][1] !== 'D') {
-        if (state.rooms[3][0] === '.') {
-            const door = 8;
-            [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                if (hall < door) {
-                    for (let i = hall; i <= door; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[3][1];
-                    option.rooms[3][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (door - hall + 2 )
-                    TryAddQueue(option);
-                }
-                else {
-                    for (let i = door; i <= hall; i++) {
-                        if (state.hall[i] !== '.') {
-                            return;
-                        }
-                    }
-
-                    // option!
-                    const option = state.clone();
-                    const occupant = option.rooms[3][1];
-                    option.rooms[3][1] = '.';
-                    option.hall[hall] = occupant;
-                    option.spent += energy[occupant] * (hall - door + 2 )
-                    TryAddQueue(option);
-                }
-            });
-        }
-    }
-    */
-    if (i__ === 47001) console.log('b');
-
-    // Hallways
-    state.hall.forEach((occupant, hall) => {
-        if (i__ === 47001) console.log('b2', occupant, hall);
-        if (occupant === '.') return;
-
-        let accessible = state.hall.map((_, i) => false);
-        for (let i = hall - 1; i >= 0; i--) {
-            if (state.hall[i] === '.') {
-                accessible[i] = true;
-            }
-            else {
                 break;
             }
-        }
-        for (let i = hall + 1; i < state.hall.length; i++) {
-            if (state.hall[i] === '.') {
-                accessible[i] = true;
-            }
-            else {
-                break;
-            }
-        }
+        })
 
-        // Room 1?
-        const myRoom = Occupant.indexOf(occupant);
-        if (i__ === 47001) console.log('b3', occupant, hall, myRoom, RoomOpen);
-        if (RoomOpen[myRoom]) {
-            const myDoor = 2 * (myRoom + 1);
+        // Hallways
+        state.hall.forEach((occupant, hall) => {
+            if (occupant === 0) return;
 
-            if (accessible[myDoor]) {
-                for (let d = state.rooms[myRoom].length - 1; d >= 0; d--) {
-                    if (state.rooms[myRoom][d] !== '.') {
-                        continue;
-                    }
-
-                    // console.log
-                    // Move in
-                    const distToEnter = (Math.abs(hall - myDoor) + d + 1);
-                    // option!
-                    const option = state.clone();
-                    option.rooms[myRoom][d] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * distToEnter;
-                    TryAddQueue(option);
+            let accessible = state.hall.map((_, i) => false);
+            for (let i = hall - 1; i >= 0; i--) {
+                if (state.hall[i] === 0) {
+                    accessible[i] = true;
+                }
+                else {
                     break;
                 }
-
-                /*
-
-                if (state.rooms[0][1] === '.') {
-                    // option!
-                    const option = state.clone();
-                    option.rooms[0][1] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 2) + 2)
-                    TryAddQueue(option);
+            }
+            for (let i = hall + 1; i < state.hall.length; i++) {
+                if (state.hall[i] === 0) {
+                    accessible[i] = true;
                 }
                 else {
-
-                    // option!
-                    const option = state.clone();
-                    option.rooms[0][0] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 2) + 1)
-                    TryAddQueue(option);
-                }
-                */
-            }
-        }
-
-        /*
-        if (occupant === 'A' && state.rooms[0].filter(i => i !== '.' && i !== 'A').length === 0) {
-            if (accessible[2] && state.rooms[0][0] === '.') {
-
-                if (state.rooms[0][1] === '.') {
-                    // option!
-                    const option = state.clone();
-                    option.rooms[0][1] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 2) + 2)
-                    TryAddQueue(option);
-                }
-                else {
-
-                    // option!
-                    const option = state.clone();
-                    option.rooms[0][0] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 2) + 1)
-                    TryAddQueue(option);
+                    break;
                 }
             }
-        }
 
-        // Room 2?
-        if (occupant === 'B' && state.rooms[1].filter(i => i !== '.' && i !== 'B').length === 0) {
-            if (accessible[4] && state.rooms[1][0] === '.') {
+            // Room 1?
+            const myRoom = occupant - 1;
+            if (RoomOpen[myRoom]) {
+                const myDoor = 2 * (myRoom + 1);
 
-                if (state.rooms[1][1] === '.') {
-                    // option!
-                    const option = state.clone();
-                    option.rooms[1][1] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 4) + 2)
-                    TryAddQueue(option);
-                }
-                else {
+                if (accessible[myDoor]) {
+                    for (let d = state.rooms[myRoom].length - 1; d >= 0; d--) {
+                        if (state.rooms[myRoom][d] !== 0) {
+                            continue;
+                        }
 
-                    // option!
-                    const option = state.clone();
-                    option.rooms[1][0] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 4) + 1)
-                    TryAddQueue(option);
-                }
-            }
-        }
-
-        // Room 3?
-        if (occupant === 'C' && state.rooms[2].filter(i => i !== '.' && i !== 'C').length === 0) {
-            if (accessible[6] && state.rooms[2][0] === '.') {
-
-                if (state.rooms[2][1] === '.') {
-                    // option!
-                    const option = state.clone();
-                    option.rooms[2][1] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 6) + 2)
-                    TryAddQueue(option);
-                }
-                else {
-
-                    // option!
-                    const option = state.clone();
-                    option.rooms[2][0] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 6) + 1)
-                    TryAddQueue(option);
+                        // Move in
+                        const distToEnter = (Math.abs(hall - myDoor) + d + 1);
+                        const option = state.clone();
+                        option.rooms[myRoom][d] = occupant;
+                        option.hall[hall] = 0;
+                        option.spent += energy[occupant] * distToEnter;
+                        TryAddQueue(option);
+                        break;
+                    }
                 }
             }
-        }
-
-        // Room 4?
-        if (occupant === 'D' && state.rooms[3].filter(i => i !== '.' && i !== 'D').length === 0) {
-            if (accessible[8] && state.rooms[3][0] === '.') {
-
-                if (state.rooms[3][1] === '.') {
-                    // option!
-                    const option = state.clone();
-                    option.rooms[3][1] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 8) + 2)
-                    TryAddQueue(option);
-                }
-                else {
-                    // option!
-                    const option = state.clone();
-                    option.rooms[3][0] = occupant;
-                    option.hall[hall] = '.';
-                    option.spent += energy[occupant] * (Math.abs(hall - 8) + 1)
-                    TryAddQueue(option);
-                }
-            }
-        }
-        */
-    })
-
-    if (i__ === 47001) console.log('c');
-    if (i__ % 1000 === 0) {
-        queue.sort((a, b) => {
-            const ap = a.points();
-            const bp = b.points();
-            if (ap !== bp) {
-                return bp - ap;
-            }
-
-            return a.spent - b.spent
-        });
+        })
     }
-    // console.log('---');
-    // console.log(queue[0].toString(), queue[1].toString());
-    // console.log('---');
-    // }
-    // console.log('q');
-    // console.log(queue.map(i => i.toString()).join('\n'));
-    // break;
 }
 
-// calculating[serialized] = false;
+const inputMap = MapFromInput('.');
+const initial = new State();
+initial.rooms[0].splice(0, 0, fromChar(inputMap.get(3, 2)), fromChar(inputMap.get(3, 3)))
+initial.rooms[1].splice(0, 0, fromChar(inputMap.get(5, 2)), fromChar(inputMap.get(5, 3)))
+initial.rooms[2].splice(0, 0, fromChar(inputMap.get(7, 2)), fromChar(inputMap.get(7, 3)))
+initial.rooms[3].splice(0, 0, fromChar(inputMap.get(9, 2)), fromChar(inputMap.get(9, 3)))
+console.log(`Part 1:`, solve(initial));
 
-// return cache[serialized] = best;
-// }
-clearInterval(int);
-
-console.log(best);
+initial.rooms[0].splice(1, 0, fromChar('D'), fromChar('D'))
+initial.rooms[1].splice(1, 0, fromChar('C'), fromChar('B'))
+initial.rooms[2].splice(1, 0, fromChar('B'), fromChar('A'))
+initial.rooms[3].splice(1, 0, fromChar('A'), fromChar('C'))
+console.log(`Part 2:`, solve(initial));

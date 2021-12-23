@@ -56,6 +56,20 @@ export function mode(list: number[]) {
 }
 
 export const id = (i: any) => i;
+export const deepCopy = (el: any) => {
+  if (Array.isArray(el)) {
+    return el.map(deepCopy);
+  }
+  if (typeof (el) === 'object') {
+    const result = {};
+    for (let k in el) {
+      if (el.hasOwnProperty(k)) {
+        result[k] = deepCopy(el[k]);
+      }
+    }
+  }
+  return el;
+}
 
 export function Manhattan(p1: Point, p2: Point) {
   return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) + Math.abs(p1.z - p2.y);
@@ -69,3 +83,28 @@ export const ascending = (a: number, b: number) => a - b;
 export const descending = (a: number, b: number) => b - a;
 export const addAll = (prev: number, val: number) => prev + val;
 export const multiplyAll = (prev: number, val: number) => prev * val;
+
+export function BinarySearch<T>(list: T[], element: T, heuristic: (keyof T) | ((el: T) => number)) {
+  if (typeof (heuristic) !== 'function') {
+    const key = heuristic;
+    heuristic = (el: T) => (el as any)[key];
+  }
+  let bot = 0;
+  let top = list.length;
+  while (top - bot > 1) {
+    let ndx = Math.floor((top + bot) / 2);
+    if (heuristic(element) < heuristic(list[ndx])) {
+      top = ndx;
+    }
+    else {
+      bot = ndx;
+    }
+  }
+
+  return bot;
+}
+
+export function BinaryInsert<T>(list: T[], element: T, heuristic: (keyof T) | ((el: T) => number)) {
+  const position = BinarySearch(list, element, heuristic);
+  list.splice(position, 0, element);
+}
