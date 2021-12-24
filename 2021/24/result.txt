@@ -1,0 +1,10 @@
+input[0] = input[13]
+input[1] + 5 = input[12]
+input[2] - 8 = input[11]
+input[3] - 2 = input[8]
+input[4] + 7 = input[5]
+input[6] - 7 = input[7]
+input[9] - 3 = input[10]
+
+94992992796199
+11931881141161
