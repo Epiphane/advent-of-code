@@ -78,6 +78,13 @@ Object.defineProperty(Array.prototype, 'end', {
     return this[this.length - 1];
   }
 });
+Object.defineProperty(Array.prototype, 'swap', {
+  value: function (first: number, second: number) {
+    const temp = this[first];
+    this[first] = this[second];
+    this[second] = temp;
+  }
+});
 
 export const id = (i: any) => i;
 export const deepCopy = (el: any) => {
