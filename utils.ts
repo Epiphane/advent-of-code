@@ -73,6 +73,11 @@ Object.defineProperty(Object.prototype, 'values', {
     return result;
   }
 });
+Object.defineProperty(Array.prototype, 'end', {
+  value: function () {
+    return this[this.length - 1];
+  }
+});
 
 export const id = (i: any) => i;
 export const deepCopy = (el: any) => {

@@ -1,73 +1,80 @@
 // @ts-nocheck
 
 import * as fs from 'fs';
-import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';
-import { question } from 'readline-sync';
-const md5 = require('../../md5');
+import '../../utils';
 const print = console.log;
 
 let file = process.argv[2] || 'input';
 let raw = fs.readFileSync(file + '.txt').toString().trim();
 
-let asLines = raw.split('\n').map(line => line.trim());
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
-let asNumberMap = MapFromInput(0, makeInt)
+class Group {
+    score = 0;
+    children: Group[] = [];
 
-const group = (parent) => { return { score: parent + 1, groups: [], garbage: [] } };
-const garbo = () => { return { garbo: true, val: '' } };
+    constructor(public readonly parent: Group) {
+        if (parent) {
+            this.score = parent.score + 1;
+        }
+    }
 
-let groups = [];
-let top = group(-1);
-let groupStack = [top];
+    getScore() {
+        return this.children.reduce((prev, child) => prev + child.getScore(), this.score);
+    }
+
+    countGarbage() {
+        return this.children.reduce((prev, child) => prev + child.countGarbage(), 0);
+    }
+}
+
+class Garbage extends Group {
+    size = 0;
+
+    getScore() {
+        return 0;
+    }
+
+    countGarbage() {
+        return this.size;
+    }
+}
+
+const base = new Group(null);
+
 let ignore = false;
-let total = 0;
-raw.split('').forEach(l => {
-    let curGrp = groupStack[groupStack.length - 1];
-    if (curGrp.garbo) {
+let current = base;
+for (let i = 0; i < raw.length; i++) {
+    const char = raw[i];
+
+    if (current instanceof Garbage) {
         if (ignore) {
             ignore = false;
-            return;
         }
-
-        if (l === '>') {
-            groupStack.pop();
+        else if (char === '>') {
+            current = current.parent;
         }
-        else if (l === '!') {
+        else if (char === '!') {
             ignore = true;
         }
         else {
-            curGrp.val += l;
-            total++;
+            current.size++;
         }
     }
     else {
-        if (l === '{') {
-            let newGrp = group(curGrp.score);
-            curGrp.groups.push(newGrp);
-            groupStack.push(newGrp);
+        if (char === '{') {
+            const child = new Group(current);
+            current.children.push(child);
+            current = child;
         }
-        else if (l === '}') {
-            groupStack.pop();
+        else if (char === '}') {
+            current = current.parent;
         }
-        else if (l === '<') {
-            let newGrp = garbo();
-            curGrp.garbage.push(newGrp);
-            groupStack.push(newGrp);
-            ignore = false;
+        else if (char === '<') {
+            const child = new Garbage(current);
+            current.children.push(child);
+            current = child;
         }
     }
-});
-
-function score(top) {
-    let result = top.score;
-    top.groups.forEach(grp => result += score(grp));
-    return result;
 }
 
-print(score(top));
-print(total)
+print(`Part 1: ${base.getScore()}`);
+print(`Part 2: ${base.countGarbage()}`);
