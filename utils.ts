@@ -40,6 +40,12 @@ export function gcd(x: number, y: number) {
   return x;
 }
 
+export function max(list: number[]) {
+  let max = list[0];
+  list.forEach(val => max = Math.max(max, val));
+  return max;
+}
+
 export function mode(list: number[]) {
   let frequency: number[] = [];
   let candidate = list[0];
@@ -54,6 +60,25 @@ export function mode(list: number[]) {
 
   return candidate;
 }
+
+Object.defineProperty(Object.prototype, 'keys', {
+  value: function () {
+    const result = [];
+    for (const key in this) {
+      result.push(key);
+    }
+    return result;
+  }
+});
+Object.defineProperty(Object.prototype, 'values', {
+  value: function () {
+    const result = [];
+    for (const key in this) {
+      result.push(this[key]);
+    }
+    return result;
+  }
+});
 
 export const id = (i: any) => i;
 export const deepCopy = (el: any) => {

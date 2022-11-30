@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range } from '../../utils';
+import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';
 import { question } from 'readline-sync';
 const md5 = require('../../md5');
 const print = console.log;

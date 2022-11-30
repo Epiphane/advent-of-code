@@ -11,27 +11,64 @@ function fromChar(char: string) {
     return ['.', 'A', 'B', 'C', 'D'].indexOf(char);
 }
 
-class State {
-    rooms = range(4).map(() => [] as number[]);
-    hall = range(11).map(() => 0);
-    spent = 0;
+class Space {
+    occupant = 0;
+    canOccupy: boolean;
+
+    constructor(public x: number) {
+        this.canOccupy = [0, 1, 3, 5, 7, 9, 10].includes(x);
+    }
+}
+
+class Room {
+    occupants: number[] = [];
+
+    left: Space[] = [];
+    right: Space[] = [];
+
+    constructor(
+        public index: number
+    ) { }
 
     isComplete() {
-        return this.rooms.every((room, num) => room.every(occ => occ === num + 1));
+        return this.occupants.every(occupant => occupant === this.index + 1);
+    }
+
+    isOpen() {
+        return this.occupants.every(occupant => occupant === this.index + 1 || occupant === 0)
+    }
+}
+
+class State {
+    rooms = range(4).map(num => new Room(num));
+    hall = range(11).map(x => new Space(x));
+    hallReverse = this.hall.slice().reverse();
+    spent = 0;
+
+    constructor() {
+        // Construct the hall connections
+        this.rooms.forEach((room, num) => {
+            room.left = this.hall.slice(0, 2 * num + 3).reverse();
+            room.right = this.hall.slice(2 * num + 2);
+        })
+    }
+
+    isComplete() {
+        return this.rooms.every(room => room.isComplete());
     }
 
     clone() {
         const state = new State();
-        state.hall = this.hall.map(deepCopy);
-        state.rooms = this.rooms.map(deepCopy);
+        this.hall.forEach(({ occupant }, x) => state.hall[x].occupant = occupant);
+        this.rooms.forEach((room, num) => state.rooms[num].occupants = room.occupants.slice())
         state.spent = this.spent;
         return state;
     }
 
     serialize() {
         let id = 0;
-        this.hall.forEach(v => id = id * 5 + v);
-        this.rooms.forEach(room => room.forEach(v => id = id * 5 + v));
+        this.hall.forEach(({ occupant }) => id = id * 5 + occupant);
+        this.rooms.forEach(({ occupants }) => occupants.forEach(v => id = id * 5 + v));
         return id;
     }
 
@@ -39,10 +76,10 @@ class State {
         return [
             `Spent: (${this.spent})`,
             `#############`,
-            `#${this.hall.map(toChar).join('')}#`,
-            ...this.rooms[0].map((_, depth) => {
+            `#${this.hall.map(({ occupant }) => toChar(occupant)).join('')}#`,
+            ...range(this.rooms[0].occupants.length).map(depth => {
                 const pad = ['##'][depth] ?? '  ';
-                return [pad, ...this.rooms.map(room => toChar(room[depth])), pad].join('#')
+                return [pad, ...this.rooms.map(room => toChar(room.occupants[depth])), pad].join('#')
             }),
             `  #########`,
         ].join('\n');
@@ -63,107 +100,82 @@ function solve(initial: State) {
         BinaryInsert(queue, state, 'spent');
     }
 
-    while (queue.length > 0) {
-        const state = queue.shift();
+    let i__ = 0;
 
+    while (queue.length > 0) {
+        // if (queue.length - 1) break;
+        const state = queue.shift();
         if (state.isComplete()) {
             return state.spent;
         }
 
-        const RoomOpen =
-            state.rooms.map((room, num) => room.every(occ => !occ || occ === num + 1));
+        if (i__++ % 1000 === 0) {
+            console.log(state.toString());
+        }
 
-        RoomOpen.forEach((isOpen, roomNum) => {
-            if (isOpen) {
+        // A room is either mixed or clear. Mixed rooms need to be emptied
+        // so that the intended inhabitants can enter, because of this rule:
+        //
+        // - Amphipods will never move from the hallway into a room unless
+        //   that room is their destination room and that room contains no
+        //   amphipods which do not also have that room as their own destination.
+
+        // Empy mixed rooms
+        state.rooms.forEach(room => {
+            if (room.isOpen()) {
                 return;
             }
 
-            const room = state.rooms[roomNum];
+            // Only the amphipod on top can leave
+            const index = room.occupants.findIndex(occ => occ);
+            const occupant = room.occupants[index];
+            const upDist = index + 1;
 
-            for (let i = 0; i < room.length; i++) {
-                if (room[i] === 0) {
-                    continue;
+            // Take advantage of find's short circuiting to exit early,
+            // once we've found the first occupied space.
+            const tryEnterHallway = (space: Space, dist: number) => {
+                if (space.occupant) {
+                    return true;
                 }
 
-                const exitDist = i + 1;
-                const door = 2 * (roomNum + 1);
-                [0, 1, 3, 5, 7, 9, 10].forEach(hall => {
-                    if (hall < door) {
-                        for (let i = hall; i <= door; i++) {
-                            if (state.hall[i]) {
-                                return;
-                            }
-                        }
-
-                        const option = state.clone();
-                        const occupant = option.rooms[roomNum][i];
-                        option.rooms[roomNum][i] = 0;
-                        option.hall[hall] = occupant;
-                        option.spent += energy[occupant] * (door - hall + exitDist);
-                        TryAddQueue(option);
-                    }
-                    else {
-                        for (let i = door; i <= hall; i++) {
-                            if (state.hall[i]) {
-                                return;
-                            }
-                        }
-
-                        const option = state.clone();
-                        const occupant = option.rooms[roomNum][i];
-                        option.rooms[roomNum][i] = 0;
-                        option.hall[hall] = occupant;
-                        option.spent += energy[occupant] * (hall - door + exitDist);
-                        TryAddQueue(option);
-                    }
-                });
-
-                break;
-            }
+                const option = state.clone();
+                option.rooms[room.index].occupants[index] = 0;
+                option.hall[space.x].occupant = occupant;
+                option.spent += energy[occupant] * (dist + upDist);
+                TryAddQueue(option);
+            };
+            room.left.find(tryEnterHallway);
+            room.right.find(tryEnterHallway);
         })
 
-        // Hallways
-        state.hall.forEach((occupant, hall) => {
-            if (occupant === 0) return;
-
-            let accessible = state.hall.map((_, i) => false);
-            for (let i = hall - 1; i >= 0; i--) {
-                if (state.hall[i] === 0) {
-                    accessible[i] = true;
-                }
-                else {
-                    break;
-                }
-            }
-            for (let i = hall + 1; i < state.hall.length; i++) {
-                if (state.hall[i] === 0) {
-                    accessible[i] = true;
-                }
-                else {
-                    break;
-                }
+        // Now try to move amphipods from hallways into their room.
+        state.hall.forEach(({ occupant, x }) => {
+            if (!occupant) {
+                return;
             }
 
-            // Room 1?
-            const myRoom = occupant - 1;
-            if (RoomOpen[myRoom]) {
-                const myDoor = 2 * (myRoom + 1);
+            // How far can we move?
+            const leftMax = state.hallReverse
+                .findIndex(({ occupant }, pos) => pos < x && !!occupant) + 1;
+            const rightMax = state.hall
+                .findIndex(({ occupant }, pos) => pos > x && !!occupant) - 1;
 
-                if (accessible[myDoor]) {
-                    for (let d = state.rooms[myRoom].length - 1; d >= 0; d--) {
-                        if (state.rooms[myRoom][d] !== 0) {
-                            continue;
+            const myRoom = state.rooms[occupant - 1];
+            if (myRoom.isOpen()) {
+                // Can we even get to the door?
+                const myDoor = 2 * occupant;
+                if (myDoor >= leftMax && myDoor <= rightMax) {
+                    myRoom.occupants.slice().reverse().find((current, y) => {
+                        if (current === 0) {
+                            // Move in
+                            const option = state.clone();
+                            option.rooms[myRoom.index][y] = occupant;
+                            option.hall[x].occupant = 0;
+                            option.spent += energy[occupant] * (Math.abs(x - myDoor) + (y + 1));
+                            TryAddQueue(option);
+                            return true;
                         }
-
-                        // Move in
-                        const distToEnter = (Math.abs(hall - myDoor) + d + 1);
-                        const option = state.clone();
-                        option.rooms[myRoom][d] = occupant;
-                        option.hall[hall] = 0;
-                        option.spent += energy[occupant] * distToEnter;
-                        TryAddQueue(option);
-                        break;
-                    }
+                    })
                 }
             }
         })
@@ -172,14 +184,14 @@ function solve(initial: State) {
 
 const inputMap = MapFromInput('.');
 const initial = new State();
-initial.rooms[0].splice(0, 0, fromChar(inputMap.get(3, 2)), fromChar(inputMap.get(3, 3)))
-initial.rooms[1].splice(0, 0, fromChar(inputMap.get(5, 2)), fromChar(inputMap.get(5, 3)))
-initial.rooms[2].splice(0, 0, fromChar(inputMap.get(7, 2)), fromChar(inputMap.get(7, 3)))
-initial.rooms[3].splice(0, 0, fromChar(inputMap.get(9, 2)), fromChar(inputMap.get(9, 3)))
+initial.rooms[0].occupants.splice(0, 0, fromChar(inputMap.get(3, 2)), fromChar(inputMap.get(3, 3)))
+initial.rooms[1].occupants.splice(0, 0, fromChar(inputMap.get(5, 2)), fromChar(inputMap.get(5, 3)))
+initial.rooms[2].occupants.splice(0, 0, fromChar(inputMap.get(7, 2)), fromChar(inputMap.get(7, 3)))
+initial.rooms[3].occupants.splice(0, 0, fromChar(inputMap.get(9, 2)), fromChar(inputMap.get(9, 3)))
 console.log(`Part 1:`, solve(initial));
 
-initial.rooms[0].splice(1, 0, fromChar('D'), fromChar('D'))
-initial.rooms[1].splice(1, 0, fromChar('C'), fromChar('B'))
-initial.rooms[2].splice(1, 0, fromChar('B'), fromChar('A'))
-initial.rooms[3].splice(1, 0, fromChar('A'), fromChar('C'))
-console.log(`Part 2:`, solve(initial));
+// initial.rooms[0].occupants.splice(1, 0, fromChar('D'), fromChar('D'))
+// initial.rooms[1].occupants.splice(1, 0, fromChar('C'), fromChar('B'))
+// initial.rooms[2].occupants.splice(1, 0, fromChar('B'), fromChar('A'))
+// initial.rooms[3].occupants.splice(1, 0, fromChar('A'), fromChar('C'))
+// console.log(`Part 2:`, solve(initial));
