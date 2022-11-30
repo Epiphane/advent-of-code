@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as fs from 'fs';
 import { Map, MapFromInput } from '../../map';
 import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';

@@ -40,12 +40,6 @@ export function gcd(x: number, y: number) {
   return x;
 }
 
-export function max(list: number[]) {
-  let max = list[0];
-  list.forEach(val => max = Math.max(max, val));
-  return max;
-}
-
 export function mode(list: number[]) {
   let frequency: number[] = [];
   let candidate = list[0];
