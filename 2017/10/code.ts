@@ -1,62 +1,46 @@
 // @ts-nocheck
 
 import * as fs from 'fs';
-import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';
-import { question } from 'readline-sync';
-const md5 = require('../../md5');
+import { makeInt, range } from '../../utils';
 const print = console.log;
 
 let file = process.argv[2] || 'input';
 let raw = fs.readFileSync(file + '.txt').toString().trim();
 
-let asLines = raw.split('\n').map(line => line.trim());
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
-let asNumberMap = MapFromInput(0, makeInt)
+function runHash(iterations: number, input: number[]) {
+    const list = range(256);
+    let pos = 0;
+    let skip = 0;
 
-let list = range(256);
-let pos = 0;
-let skip = 0;
-let input = raw.split('').map(l => l.charCodeAt(0));
-input = input.concat(17, 31, 73, 47, 23);
+    range(iterations).forEach(() =>
+        input.forEach(length => {
+            for (let i = 0; i < length / 2; i++) {
+                let left = (pos + i) % list.length;
+                let right = (pos + length - 1 - i) % list.length;
+                list.swap(left, right);
+            }
 
-function rev(arr: number[], start, size) {
-    for (let i = 0; i < size / 2; i++) {
-        let left = start + i;
-        let right = start + size - i - 1;
+            pos += length + skip;
+            skip++;
 
-        left %= arr.length;
-        right %= arr.length;
+            pos = pos % list.length;
+        })
+    );
 
-        arr.swap(left, right);
-    }
+    return list;
 }
 
-range(64).forEach(() =>
-    input.forEach(num => {
-        rev(list, pos, num);
+const part1Input = raw.split(',').map(makeInt);
+const part1 = runHash(1, part1Input);
+print(`Part 1: ${part1[0] * part1[1]}`);
 
-        pos += num + skip;
-        skip++;
-
-        pos = pos % list.length;
-    })
-);
-
-print(list[0] * list[1])
-
-let result = '';
-for (let i = 0; i < list.length; i) {
-    let num = 0;
-    for (let j = 0; j < 16; j++) {
-        num ^= list[i++];
-    }
-    let str = num.toString(16).padStart(2, '0');
-    result += str;
-}
-
-print(result)
+const part2Input = raw.split('')
+    .map(l => l.charCodeAt(0))
+    .concat(17, 31, 73, 47, 23);
+const part2 = runHash(64, part2Input);
+const hash = range(part2.length / 16).reduce((prev, grp) => {
+    const group = part2.slice(grp * 16, (grp + 1) * 16);
+    const hash = group.reduce((prev, next) => prev ^ next, 0);
+    return prev + hash.toString(16).padStart(2, '0');
+}, '');
+print(`Part 2: ${hash}`);
