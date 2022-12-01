@@ -166,7 +166,7 @@ export class Map<T> {
   forNeighbors(
     cx: number,
     cy: number,
-    callack: (value: T, x: number, y: number) => void,
+    callback: (value: T, x: number, y: number) => void,
     dist = 1,
   ) {
     for (let dx = -dist; dx <= dist; dx++) {
@@ -176,7 +176,7 @@ export class Map<T> {
         const x = cx + dx;
         const y = cy + dy;
         if (this.contains(x, y)) {
-          callack(this.get(x, y), x, y);
+          callback(this.get(x, y), x, y);
         }
       }
     }
