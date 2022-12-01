@@ -18,14 +18,14 @@ let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
 let asMap = MapFromInput('.');
 let asNumberMap = MapFromInput(0, makeInt)
 
-function runHash(iterations: number, input: string) {
+export function KnotHash(input: string) {
     const list = range(256);
     let pos = 0;
     let skip = 0;
 
     input = input.split('').map(i => i.charCodeAt(0)).concat(17, 31, 73, 47, 23);
 
-    range(iterations).forEach(() =>
+    range(64).forEach(() =>
         input.forEach(length => {
             for (let i = 0; i < length / 2; i++) {
                 let left = (pos + i) % list.length;
@@ -43,48 +43,61 @@ function runHash(iterations: number, input: string) {
     return range(list.length / 16).reduce((prev, grp) => {
         const group = list.slice(grp * 16, (grp + 1) * 16);
         const hash = group.reduce((prev, next) => prev ^ next, 0);
-        return prev + hash.toString(2).padStart(4, '0');
+        return prev + hash.toString(16).padStart(2, '0');
     }, '');
 }
 
-// print(runHash(64, `flqrgnkx-0`))
-// print(runHash(64, `flqrgnkx-0`).split('').map(i => parseInt(i, 16).toString(2).padStart(4, '0')).join('').length);
+function getRow(input: string) {
+    return KnotHash(input).split('').map(l => parseInt(l, 16).toString(2).padStart(4, '0')).join('');
+}
 
 let total = 0;
 let used = new Map(false);
 range(128).forEach(layer => {
-    runHash(64, `${raw}-${layer}`).split('').map(makeInt).forEach((i, col) => {
+    getRow(`${raw}-${layer}`).split('').map(makeInt).forEach((i, col) => {
         used.set(col, layer, i === 1);
     })
-    // total += runHash(64, `${raw}-${layer}`).split('').map(makeInt).reduce(addAll, 0);
 })
 
 print(used.reduce(addAll, 0));
 
-let regions = new Map(-1);
-used.set(128, 128, false);
-regions.set(128, 128, 0);
+let regions = new Map(0);
+regions.set(0, 0, 0);
+regions.set(127, 127, 0);
 
-// let total = 0;
-function fill(x, y, region) {
-    if (regions.get(x, y) >= 0) return;
-    regions.set(x, y, region);
+function fill(x: number, y: number, region: number) {
+    let _x, _y;
+    try {
+        if (regions.get(x, y) > 0) return;
 
-    // print(x, y, region);
-    print(used.min, used.max);
-    used.forNeighbors(x, y, (val, nx, ny) => {
-        if (!val && regions.get(nx, ny) < 0) {
-            // print(region);
-            fill(nx, ny, region);
-        }
-    })
+        // console.log(x, y);
+        _x = x;
+        _y = y;
+        regions.set(x, y, region);
+        used.forAdjacent(x, y, (val, nx, ny) => {
+            if (val) {
+                // print(region);
+                fill(nx, ny, region);
+            }
+        })
+    }
+    catch (e) {
+        print(_x, _y, region);
+        print("HELP");
+        // return;
+    }
 }
 
+print(used.map(i => i ? '#' : '.').print());
+let nextRegion = 0;
 used.forEach((val, x, y) => {
-    if (!val && regions.get(x, y) < 0) {
-        fill(x, y, ++total);
-        // print(x, y, total);
+    if (val && !regions.get(x, y)) {
+        print('new region', x, y, nextRegion + 1);
+        fill(x, y, ++nextRegion);
     }
 })
 
-print(total);
+regions.max.x = 16;
+regions.max.y = 16;
+print(regions.print('\t'));
+print(nextRegion);
