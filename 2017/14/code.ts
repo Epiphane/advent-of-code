@@ -1,22 +1,12 @@
 // @ts-nocheck
 
 import * as fs from 'fs';
-import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range, mode, addAll } from '../../utils';
-import { question } from 'readline-sync';
-const md5 = require('../../md5');
+import { Map } from '../../map';
+import { makeInt, range, addAll } from '../../utils';
 const print = console.log;
 
 let file = process.argv[2] || 'input';
-let raw = fs.readFileSync(file + '.txt').toString().trim();
-
-let asLines = raw.split('\n').map(line => line.trim());
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
-let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
-let asMap = MapFromInput('.');
-let asNumberMap = MapFromInput(0, makeInt)
+let input = fs.readFileSync(file + '.txt').toString().trim();
 
 export function KnotHash(input: string) {
     const list = range(256);
@@ -48,56 +38,41 @@ export function KnotHash(input: string) {
 }
 
 function getRow(input: string) {
-    return KnotHash(input).split('').map(l => parseInt(l, 16).toString(2).padStart(4, '0')).join('');
+    return KnotHash(input)
+        .split('')
+        .map(l => parseInt(l, 16)
+            .toString(2)
+            .padStart(4, '0'))
+        .join('');
 }
 
-let total = 0;
 let used = new Map(false);
 range(128).forEach(layer => {
-    getRow(`${raw}-${layer}`).split('').map(makeInt).forEach((i, col) => {
+    getRow(`${input}-${layer}`).split('').map(makeInt).forEach((i, col) => {
         used.set(col, layer, i === 1);
     })
 })
 
-print(used.reduce(addAll, 0));
+print(`Part 1:`, used.reduce(addAll, 0));
 
-let regions = new Map(0);
-regions.set(0, 0, 0);
-regions.set(127, 127, 0);
+let regions = new Map(0, 0, 127);
 
 function fill(x: number, y: number, region: number) {
-    let _x, _y;
-    try {
-        if (regions.get(x, y) > 0) return;
+    if (regions.get(x, y) > 0) return;
 
-        // console.log(x, y);
-        _x = x;
-        _y = y;
-        regions.set(x, y, region);
-        used.forAdjacent(x, y, (val, nx, ny) => {
-            if (val) {
-                // print(region);
-                fill(nx, ny, region);
-            }
-        })
-    }
-    catch (e) {
-        print(_x, _y, region);
-        print("HELP");
-        // return;
-    }
+    regions.set(x, y, region);
+    used.forAdjacent(x, y, (val, nx, ny) => {
+        if (val) {
+            fill(nx, ny, region);
+        }
+    })
 }
 
-print(used.map(i => i ? '#' : '.').print());
 let nextRegion = 0;
 used.forEach((val, x, y) => {
     if (val && !regions.get(x, y)) {
-        print('new region', x, y, nextRegion + 1);
         fill(x, y, ++nextRegion);
     }
 })
 
-regions.max.x = 16;
-regions.max.y = 16;
-print(regions.print('\t'));
-print(nextRegion);
+print(`Part 2:`, nextRegion);
