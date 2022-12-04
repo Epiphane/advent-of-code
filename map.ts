@@ -6,7 +6,19 @@ export class Map<T> {
   min?: Point;
   max?: Point;
 
-  constructor(public defaultValue?: T) { }
+  constructor(
+    public defaultValue?: T,
+    min?: number | Point,
+    max?: number | Point
+  ) {
+    if (typeof (min) === 'number') {
+      this.min = new Point(min, min);
+    }
+
+    if (typeof (max) === 'number') {
+      this.max = new Point(max, max);
+    }
+  }
 
   contains(x: number, y: number) {
     return x >= this.min.x &&
