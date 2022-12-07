@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 export class Interpreter {
   instructions: [string, ...(number | string)[]][];
   registers = Array.from(new Array(100), () => 0);
@@ -23,6 +25,7 @@ export class Interpreter {
   }
 
   step() {
+    if (this.complete()) return;
     const [cmd, ...args] = this.instructions[this.pc];
 
     // console.log([cmd, ...args].join(" "));
@@ -47,7 +50,7 @@ export class Interpreter {
   }
 
   complete() {
-    return isNaN(this.pc) || this.pc >= this.instructions.length;
+    return isNaN(this.pc) || this.pc < 0 || this.pc >= this.instructions.length;
   }
 
   run() {

@@ -21,14 +21,31 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-asLines.forEach(line => {
-    const [] = line.split(',');
+let input = raw.split('');
+
+let done = false;
+let mapping = {};
+input.forEach((l, i) => {
+    mapping[l] = mapping[l] || 0;
+    mapping[l]++;
+
+    if (i >= 14) {
+        mapping[input[i - 14]]--;
+    }
+
+    for (let l2 in mapping) {
+        if (mapping[l2] > 1) {
+            return;
+        }
+    }
+
+    if (total > 0 || i < 13) return;
+
+    total = i + 1;
+    // print(i);
+    // print(input.slice(i - 4, i));
+    // print(input[1624]);
 })
 
-// BFS
-let stack = []
-while (stack.length) {
-    top = stack.shift();
-}
 
 print(total);

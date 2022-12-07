@@ -1,7 +1,6 @@
 // @ts-nocheck
 
 import * as fs from 'fs';
-import { Interpreter } from '../../interpreter.ts';
 import { Map, MapFromInput } from '../../map';
 import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';
 import { question } from 'readline-sync';
@@ -21,14 +20,46 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-asLines.forEach(line => {
-    const [] = line.split(',');
-})
 
-// BFS
-let stack = []
-while (stack.length) {
-    top = stack.shift();
+let AS = 873;
+let BS = 583;
+
+function calc(n, factor) {
+    return (n * factor) % 2147483647;
 }
+
+let a = 873
+let b = BS;
+
+// a = 65;
+// b = 8921;
+
+range(5 * 1000000).forEach(() => {
+    do {
+        a = calc(a, 16807)
+    }
+    while (a % 4 !== 0);
+
+    do { b = calc(b, 48271) }
+    while (b % 8 !== 0);
+
+    // print(a, b);
+
+    let _a = a & 0xffff;
+    let _b = b & 0xffff;
+
+    // print(a, b);
+
+    // let aEnd = a.toString(2).padStart(16, '0');
+    // let bEnd = b.toString(2).padStart(16, '0');
+
+    // aEnd = aEnd.substring(aEnd.length - 16);
+    // bEnd = bEnd.substring(bEnd.length - 16);
+
+    // print(aEnd.length, bEnd.length);
+    if (_a === _b) total++;
+});
+
+// print(a, b);
 
 print(total);
