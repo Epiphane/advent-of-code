@@ -64,8 +64,13 @@ fs.readFileSync(file + '.txt').toString()
         }
     });
 
+print(directories
+    .filter(dir => dir.size <= 100000)
+    .map(dir => [dir.name, dir.size]))
+
 print(`Part 1:`, directories
     .filter(dir => dir.size <= 100000)
+    .map(dir => dir.size)
     .reduce((prev, dir) => prev + dir.size, 0));
 
 const unused = 70000000 - root.size;

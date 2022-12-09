@@ -139,3 +139,10 @@ export function BinaryInsert<T>(list: T[], element: T, heuristic: (keyof T) | ((
   const position = BinarySearch(list, element, heuristic);
   list.splice(position, 0, element);
 }
+
+export const Directions = [
+  { dx: -1, dy: 0 },
+  { dx: 0, dy: -1 },
+  { dx: 1, dy: 0 },
+  { dx: 0, dy: 1 }
+];

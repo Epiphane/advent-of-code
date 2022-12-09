@@ -151,26 +151,29 @@ export class Map<T> {
     cx: number,
     cy: number,
     callback: (value: T, x: number, y: number) => void,
+    dist = 1,
     diagonal = false
   ) {
     if (diagonal) {
-      this.forNeighbors(cx, cy, callback, 1);
+      this.forNeighbors(cx, cy, callback, dist);
     }
     else {
-      if (this.contains(cx - 1, cy)) {
-        callback(this.get(cx - 1, cy), cx - 1, cy);
-      }
+      for (let d = 1; d <= dist; d++) {
+        if (this.contains(cx - d, cy)) {
+          callback(this.get(cx - d, cy), cx - d, cy);
+        }
 
-      if (this.contains(cx + 1, cy)) {
-        callback(this.get(cx + 1, cy), cx + 1, cy);
-      }
+        if (this.contains(cx + d, cy)) {
+          callback(this.get(cx + d, cy), cx + d, cy);
+        }
 
-      if (this.contains(cx, cy - 1)) {
-        callback(this.get(cx, cy - 1), cx, cy - 1);
-      }
+        if (this.contains(cx, cy - d)) {
+          callback(this.get(cx, cy - d), cx, cy - d);
+        }
 
-      if (this.contains(cx, cy + 1)) {
-        callback(this.get(cx, cy + 1), cx, cy + 1);
+        if (this.contains(cx, cy + d)) {
+          callback(this.get(cx, cy + d), cx, cy + d);
+        }
       }
     }
   }
