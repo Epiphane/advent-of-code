@@ -11,15 +11,23 @@ const print = console.log;
 let file = process.argv[2] || 'input';
 let raw = fs.readFileSync(file + '.txt').toString().trim();
 
-let asLines = raw.split('\n').map(line => line.trim());
-let asNumbers = raw.split('\n').map(line => parseInt(line.trim()));
+let asLines = raw.split('\n').map(line => line);
+let asNumbers = raw.split('\n').map(line => parseInt(line));
 let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
-    line.trim().split('\n').map(line =>
-        line.trim()));
+    line.split('\n').map(line =>
+        line));
 let asMap = MapFromInput('.');
 let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
+
+class MyInterpreter extends Interpreter {
+    constructor(instrs: string[]) {
+        super(instrs);
+    }
+}
+
+let program = new MyInterpreter(asLines);
 
 asLines.forEach(line => {
     const [] = line.split(',');

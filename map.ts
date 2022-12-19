@@ -20,6 +20,12 @@ export class Map<T> {
     }
   }
 
+  copy() {
+    const result = new Map<T>(this.defaultValue, this.min, this.max);
+    this.map((v, x, y) => result.set(x, y, v));
+    return result;
+  }
+
   contains(x: number, y: number) {
     return x >= this.min.x &&
       x < this.max.x &&
@@ -95,7 +101,7 @@ export class Map<T> {
 
     let maxSize = 0;
     let rows = [];
-    for (let y = this.min.y; y < this.max.y; ++y) {
+    for (let y = this.max.y; y >= this.min.y; --y) {
       let row = [];
       for (let x = this.min.x; x < this.max.x; ++x) {
         let val = "";
