@@ -5,8 +5,13 @@ import { Interpreter } from '../../interpreter.ts';
 import { Map, MapFromInput } from '../../map';
 import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';
 import { question } from 'readline-sync';
+import { Point } from '../../point';
 const md5 = require('../../md5');
 const print = console.log;
+const UP = new Point(0, -1);
+const DOWN = new Point(0, 1);
+const LEFT = new Point(-1, 0);
+const RIGHT = new Point(1, 0);
 
 let file = process.argv[2] || 'input';
 let raw = fs.readFileSync(file + '.txt').toString().trim();
@@ -21,22 +26,6 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-class MyInterpreter extends Interpreter {
-    constructor(instrs: string[]) {
-        super(instrs);
-    }
-}
-
-let program = new MyInterpreter(asLines);
-
 asLines.forEach(line => {
-    const [] = line.split(',');
+    const [] = line.match(/foobar/);
 })
-
-// BFS
-let stack = []
-while (stack.length) {
-    top = stack.shift();
-}
-
-print(total);

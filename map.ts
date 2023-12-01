@@ -304,7 +304,7 @@ export function MapFromInput<T>(
     require("fs")
       .readFileSync((process.argv[2] || "input") + ".txt")
       .toString()
-      .trim(),
+      .trimEnd(),
     defaultElement,
     translator
   );

@@ -85,6 +85,20 @@ Object.defineProperty(Array.prototype, 'swap', {
     this[second] = temp;
   }
 });
+Object.defineProperty(Array.prototype, 'best', {
+  value: function (score: (v: any) => number) {
+    let bestNdx = 0;
+    let bestScore = score(this[0]);
+    this.forEach((el, i) => {
+      let s = score(el);
+      if (s > bestScore) {
+        bestScore = s;
+        bestNdx = i;
+      }
+    })
+    return bestNdx;
+  }
+});
 
 export const id = (i: any) => i;
 export const deepCopy = (el: any) => {
