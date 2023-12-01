@@ -141,8 +141,8 @@ export function BinaryInsert<T>(list: T[], element: T, heuristic: (keyof T) | ((
 }
 
 export const Directions = [
+  { dx: 1, dy: 0 },
+  { dx: 0, dy: 1 },
   { dx: -1, dy: 0 },
   { dx: 0, dy: -1 },
-  { dx: 1, dy: 0 },
-  { dx: 0, dy: 1 }
 ];

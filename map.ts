@@ -101,14 +101,14 @@ export class Map<T> {
 
     let maxSize = 0;
     let rows = [];
-    for (let y = this.max.y; y >= this.min.y; --y) {
+    for (let y = this.min.y; y < this.max.y; ++y) {
       let row = [];
       for (let x = this.min.x; x < this.max.x; ++x) {
         let val = "";
-        if (this.has(x, y)) {
-          val = `${this.get(x, y)}`;
-          maxSize = Math.max(maxSize, val.length);
-        }
+        // if (this.has(x, y)) {
+        val = `${this.get(x, y)}`;
+        maxSize = Math.max(maxSize, val.length);
+        // }
         row.push(val);
       }
       rows.push(row);
