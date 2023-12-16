@@ -8,19 +8,10 @@ import { question } from 'readline-sync';
 import { Point } from '../../point';
 const md5 = require('../../md5');
 const print = console.log;
-const P = print;
 const UP = new Point(0, -1);
 const DOWN = new Point(0, 1);
 const LEFT = new Point(-1, 0);
 const RIGHT = new Point(1, 0);
-const DIRS = [UP, RIGHT, DOWN, LEFT];
-
-let Turn = (dir: number, amount: number) => {
-    dir += amount;
-    while (dir < 0) dir += 4;
-    while (dir > 3) dir -= 4;
-    return dir;
-}
 
 let file = process.argv[2] || 'input';
 let raw = fs.readFileSync(file + '.txt').toString().trim();
@@ -35,6 +26,6 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-for (let line of asLines) {
-    const [_] = line.match(/foobar/);
-}
+asLines.forEach(line => {
+    const [] = line.match(/foobar/);
+})

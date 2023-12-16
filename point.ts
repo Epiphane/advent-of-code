@@ -17,8 +17,18 @@ export class Point {
         return new Point(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
-    add(other: Point) {
+    add(other: Point | number) {
+        if (typeof (other) === 'number') {
+            return new Point(this.x + other, this.y + other, this.z + other);
+        }
         return new Point(this.x + other.x, this.y + other.y, this.z + other.z);
+    }
+
+    mult(other: Point | number) {
+        if (typeof (other) === 'number') {
+            return new Point(this.x * other, this.y * other, this.z * other);
+        }
+        return new Point(this.x * other.x, this.y * other.y, this.z * other.z);
     }
 
     equals(other: Point) {

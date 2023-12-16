@@ -14,9 +14,15 @@ export class Map<T> {
     if (typeof (min) === 'number') {
       this.min = new Point(min, min);
     }
+    else if (typeof (min) === 'object') {
+      this.min = min;
+    }
 
     if (typeof (max) === 'number') {
       this.max = new Point(max, max);
+    }
+    else if (typeof (max) === 'object') {
+      this.max = max;
     }
   }
 

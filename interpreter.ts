@@ -5,6 +5,7 @@ export class Interpreter {
   registers = Array.from(new Array(100), () => 0);
   pc = 0;
   steps = 0;
+  debug = false;
 
   constructor(instructions?: string | string[]) {
     if (typeof instructions === "undefined") {
@@ -28,10 +29,10 @@ export class Interpreter {
     if (this.complete()) return;
     const [cmd, ...args] = this.instructions[this.pc];
 
-    // console.log([cmd, ...args].join(" "));
+    if (this.debug) console.log([cmd, ...args].join(" "));
     if ((this as any)[cmd]) {
       (this as any)[cmd].apply(this, args);
-      // console.log("   " + this.registers.slice(0, 4).join(" "));
+      if (this.debug) console.log("   " + this.registers.slice(0, 4).join(" "));
     } else {
       console.error(`Unrecognized instruction: ${cmd}`);
       this.pc = this.instructions.length;

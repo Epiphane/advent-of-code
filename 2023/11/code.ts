@@ -35,6 +35,50 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-for (let line of asLines) {
-    const [_] = line.match(/foobar/);
-}
+let rows = [];
+let cols = [];
+asMap.forEach((v, x, y) => {
+    rows[y] = rows[y] || false;
+    cols[x] = cols[x] || false;
+    if (v === '#') {
+        rows[y] = true;
+        cols[x] = true;
+    }
+});
+
+let newMap = new Map('.');
+let stars = [];
+
+asMap.forEach((v, x, y) => {
+    let inc = 0;
+    for (let _x in cols) {
+        if (!cols[_x] && _x < x) {
+            inc += 1000000 - 1;
+        }
+    }
+    x += inc;
+
+    inc = 0;
+    for (let _y in rows) {
+        if (!rows[_y] && _y < y) {
+            inc += 1000000 - 1;
+        }
+    }
+    y += inc;
+
+    newMap.set(x, y, v);
+    if (v === '#') stars.push({ x, y });
+})
+
+let k = 0;
+print(stars);
+stars.forEach((s, i) => {
+    stars.forEach((s2, j) => {
+        if (i >= j) return;
+        if (i === 2 && j === 5) print(s, s2, Math.abs(s.x - s2.x) + Math.abs(s.y - s2.y))
+        total += (Math.abs(s.x - s2.x) + Math.abs(s.y - s2.y))
+    });
+})
+
+// print(newMap.print());
+print(total);

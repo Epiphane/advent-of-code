@@ -35,6 +35,37 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-for (let line of asLines) {
-    const [_] = line.match(/foobar/);
+let now = [];//'AAA'
+let tree = {};
+for (let line of asLines.slice(2)) {
+    let [_, a, b, c] = line.match(/(.*) = \((.*), (.*)\)/)
+    // let [a, _, b, c] = line.split(' ');
+    // b = b.substring(1, 4);
+    // c = c.substring(0, c.length - 1);
+    tree[a] = { L: b, R: c };
+
+    if (a[2] === 'A') {
+        now.push(a);
+    }
 }
+print(tree);
+
+let instrs = asLines[0];
+
+function lowest(now) {
+    let total = 0;
+    let curs = 0;
+    while (now[2] !== 'Z') {
+        now = tree[now][instrs[curs]];
+
+        curs = (curs + 1) % instrs.length;
+        total++
+    }
+    print(total);
+    return total;
+}
+
+let denoms = now.map(n => lowest(n));
+print(denoms);
+
+print(denoms.reduce((prev, i) => lcm(prev, i), 1));
