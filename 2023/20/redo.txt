@@ -1,0 +1,70 @@
+broadcaster -> hd, zj, sq, jz
+% zj -> kn, pb
+% hd -> lt, nl
+% sq -> rr, vh
+% jz -> dj, ht
+
+% kn -> pb, xn
+% lt -> rh
+% vh -> qc, rr
+% ht -> jv
+
+% xn -> pb, gf
+% rh -> nl, gx
+% qc -> gp
+% jv -> dj, zs
+
+% gf -> gv
+% gp -> cp
+% gx -> xf
+% zs -> dq
+
+% xf -> tg
+% gv -> vr
+% cp -> rr, jt
+% dq -> dj, jc
+
+% tg -> nl, ks
+% vr -> qb
+% jt -> kb
+% jc -> xv
+
+% qb -> hq
+% ks -> tc
+% kb -> hj, rr
+% xv -> dj, dx
+
+% hq -> nx
+% tc -> qz
+% hj -> cf, rr
+% dx -> fq, dj
+
+% nx -> pb, bs
+% qz -> nl, rl
+% cf -> jg, rr
+% fq -> xz
+
+% bs -> pb, rd
+% rl -> pf, nl
+% jg -> rr, pd
+% xz -> dj, zp
+
+% rd -> vs, pb
+% pf -> pr, nl
+% pd -> rr, mt
+% zp -> mm, dj
+
+% vs -> pb
+% pr -> nl
+% mt -> rr
+% mm -> dj
+
+& pb -> gf, gv, vp, qb, vr, hq, zj
+& nl -> ks, cq, tc, xf, gx, hd, lt
+& rr -> gp, rv, jt, qc, sq
+& dj -> dc, fq, jz, ht, zs, jc
+& cq -> ns
+& dc -> ns
+& rv -> ns
+& vp -> ns
+& ns -> rx

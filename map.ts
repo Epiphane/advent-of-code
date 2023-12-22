@@ -120,7 +120,7 @@ export class Map<T> {
       rows.push(row);
     }
     return rows
-      .map((row) => row.map((val) => val.padEnd(maxSize)).join(colDelimiter))
+      .map((row) => row.map((val) => val.padEnd(maxSize + 1)).join(colDelimiter))
       .join(rowDelimiter);
   }
 
