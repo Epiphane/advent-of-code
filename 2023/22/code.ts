@@ -62,45 +62,43 @@ function collide(brick1, brick2) {
 
 bricks.sort((a, b) => a.min.z - b.min.z);
 
-function fall(bricks) {
+function fall(bricks, stopAtOne) {
     let fell = [];
 
-    let newbricks = [];
-
-    let newBricks = bricks.map((brick) => {
+    bricks.forEach((brick) => {
         let { id, min, max } = brick;
-        let newbrick = { id, min: min.copy(), max: max.copy(), above: [] };
         let good = true;
         let ifell = false;
-        while (newbrick.min.z > 1) {
-            newbrick.min.z--;
-            newbrick.max.z--;
+        while (brick.min.z > 1) {
+            brick.min.z--;
+            brick.max.z--;
             bricks.forEach(other => {
                 if (other.id === id) return;
-                if (collide(other, newbrick)) {
+                if (collide(other, brick)) {
                     good = false;
-                    newbrick.above.push(other.id);
+                    brick.above.push(other.id);
                 }
             });
 
             if (!good) {
-                newbrick.min.z++;
-                newbrick.max.z++;
+                brick.min.z++;
+                brick.max.z++;
                 break;
             }
             else {
                 ifell = true;
             }
+
+            if (stopAtOne)
+                break;
         }
 
         if (ifell && !fell.includes(id)) {
             fell.push(id);
         }
+    });
 
-        return newbrick;
-    })
-
-    return [newBricks, fell];
+    return [bricks, fell];
 }
 
 while (true) {
@@ -109,26 +107,34 @@ while (true) {
     if (fell.length === 0) break;
 }
 
+let part1 = 0;
+let part2 = 0;
+
 bricks.forEach(brick => {
-    let supported = bricks.filter(other => {
-        if (other.id === brick.id) return false;
-        if (other.above.includes(brick.id) && other.above.length === 1) return true;
+    let copy = bricks.map(({ id, above }) => ({ id, above }));
+
+    let supported = copy.filter(({ id, above }) => {
+        if (id === brick.id) return false;
+        if (above.includes(brick.id) && above.length === 1) return true;
     })
 
-    let newbricks = bricks.filter(other => other.id !== brick.id);
+    /*
+    let newbricks = bricks.filter(other => other.id !== brick.id).map(({ id, min, max, above }) => {
+        return { id, min: min.copy(), max: max.copy(), above: [...above] }
+    })
 
-    let allfell = [];
-    while (true) {
-        let [nb, fell] = fall(newbricks);
-        newbricks = nb;
-        if (fell.length === 0) break;
-        fell.forEach(f => {
-            if (!allfell.includes(f)) allfell.push(f);
-        })
+    let [nb, fell] = fall(newbricks, true);
+    newbricks = nb;
+
+    total += fell.length;
+    */
+
+    if (supported.length === 0) {
+        part1++;
     }
-
-    print(brick.id, 'makes', allfell.length, 'fall')
-    total += allfell.length;
+    else {
+        // supported.forEach
+    }
 
     // if (supported.length === 0) total++
 })
