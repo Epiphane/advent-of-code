@@ -5,6 +5,8 @@
     "ts-node": "^10.4.0"
   },
   "dependencies": {
-    "readline-sync": "^1.4.10"
+    "@graph-algorithm/minimum-cut": "^2.0.0",
+    "readline-sync": "^1.4.10",
+    "z3-solver": "^4.12.4"
   }
 }
