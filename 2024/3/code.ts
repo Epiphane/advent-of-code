@@ -35,25 +35,27 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-function* extractNumbers(matches: RegExpStringIterator) {
-    for (let match of matches) {
-        let result = [];
-        for (let key in match) {
-            result[key] = match[key];
-            if (!isNaN(+result[key])) {
-                result[key] = +result[key];
-            }
-        }
-        yield result;
-    }
-}
-
-let map = new Map(0);
+let enabled = true;
 for (let line of asLines) {
-    const matches = line.matchAll(/(\d+)/g);
-    const iterator = extractNumbers(matches);
-    for (let [text] of iterator) {
+    // let [_, a, b] = line.match(/mul\((\d+),(\d+)\)/);
+    let matches = line.matchAll(/(mul\(\d+,\d+\))|do\(\)|don't\(\)/g);
+    for (let match of matches) {
+        let mul = match[0].match(/mul\((\d+),(\d+)\)/);
+        let doo = match[0].match(/do\(\)/);
+        let dont = match[0].match(/don't\(\)/);
+
+        if (mul && enabled) {
+            print(+mul[1], +mul[2])
+            total += (+mul[1] * +mul[2])
+        }
+        else if (doo) {
+            enabled = true;
+        }
+        else if (dont) {
+            enabled = false;
+        }
     }
+
 }
 
-print(total);
+print(total)

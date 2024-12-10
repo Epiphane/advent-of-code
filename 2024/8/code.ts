@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import { Interpreter } from '../../interpreter.ts';
 import { Map, MapFromInput } from '../../map';
-import { permute, gcd, lcm, makeInt, range, mode } from '../../utils';
+import { permute, gcd, lcm, makeInt, range, mode, addAll } from '../../utils';
 import { question } from 'readline-sync';
 import { Point } from '../../point';
 const md5 = require('../../md5');
@@ -35,25 +35,33 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-function* extractNumbers(matches: RegExpStringIterator) {
-    for (let match of matches) {
-        let result = [];
-        for (let key in match) {
-            result[key] = match[key];
-            if (!isNaN(+result[key])) {
-                result[key] = +result[key];
-            }
+let newmap = asMap.copy();
+
+let antinodes = new Map(0, asMap.min, asMap.max);
+asMap.forEach((v, x, y) => {
+    if (v === '.') return;
+
+    asMap.forEach((v2, x2, y2) => {
+        if (v !== v2) return;
+
+        if (x2 === x && y2 === y) return;
+
+        let dx = (x2 - x);
+        let dy = (y2 - y);
+        let denom = gcd(dx, dy);
+        dx /= denom;
+        dy /= denom;
+        // print(dx, dy);
+
+        let nx = x + dx;
+        let ny = y + dy;
+        while (antinodes.contains(nx, ny)) {
+            antinodes.set(nx, ny, 1)
+            nx += dx;
+            ny += dy;
         }
-        yield result;
-    }
-}
+    })
+})
 
-let map = new Map(0);
-for (let line of asLines) {
-    const matches = line.matchAll(/(\d+)/g);
-    const iterator = extractNumbers(matches);
-    for (let [text] of iterator) {
-    }
-}
-
-print(total);
+print(antinodes.map(i => i ? '#' : '.').print(''))
+print(antinodes.reduce(addAll, 0));

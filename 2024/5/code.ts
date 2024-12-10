@@ -33,6 +33,11 @@ let asGroups = raw.split(/\r?\n\r?\n/).map(line =>
 let asMap = MapFromInput('.');
 let asNumberMap = MapFromInput(0, makeInt)
 
+class MyInterpreter extends Interpreter {
+}
+
+let interp = new MyInterpreter();
+
 let total = 0;
 
 function* extractNumbers(matches: RegExpStringIterator) {
@@ -48,12 +53,32 @@ function* extractNumbers(matches: RegExpStringIterator) {
     }
 }
 
-let map = new Map(0);
-for (let line of asLines) {
-    const matches = line.matchAll(/(\d+)/g);
+let rules = {};
+for (let line of asGroups[0]) {
+    const matches = line.matchAll(/(\d+)\|(\d+)/g);
     const iterator = extractNumbers(matches);
-    for (let [text] of iterator) {
+    for (let [text, a, b] of iterator) {
+        rules[a] = rules[a] || [];
+        rules[a].push(b)
     }
+}
+
+for (let line of asGroups[1]) {
+    const nums = line.split(',').map(i => +i);
+    let good = true;
+    for (let i = 0; i < nums.length; i++) {
+        nums.slice(i + 1).forEach((other, j) => {
+            if (rules[other] && rules[other].includes(nums[i])) {
+                let temp = nums[i];
+                nums[i] = other;
+                nums[j + i + 1] = temp;
+                good = false;
+            }
+        })
+    }
+
+    print(nums);
+    if (!good) total += nums[Math.floor(nums.length / 2)];
 }
 
 print(total);

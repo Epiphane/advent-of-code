@@ -19,7 +19,8 @@ if (!process.env['AOC_COOKIE']) {
 (function request() {
    https.get(`https://adventofcode.com/${year}/day/${day}/input`, {
       headers: {
-         cookie: process.env['AOC_COOKIE']
+         cookie: process.env['AOC_COOKIE'],
+         "user-agent": "home computer, local script by eyphnos@gmail.com"
       }
    }, (resp) => {
       if (resp.statusCode === 404) {

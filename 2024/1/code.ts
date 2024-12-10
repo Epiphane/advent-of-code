@@ -35,25 +35,25 @@ let asNumberMap = MapFromInput(0, makeInt)
 
 let total = 0;
 
-function* extractNumbers(matches: RegExpStringIterator) {
-    for (let match of matches) {
-        let result = [];
-        for (let key in match) {
-            result[key] = match[key];
-            if (!isNaN(+result[key])) {
-                result[key] = +result[key];
-            }
-        }
-        yield result;
-    }
-}
-
-let map = new Map(0);
+let lists = [[], []];
 for (let line of asLines) {
-    const matches = line.matchAll(/(\d+)/g);
-    const iterator = extractNumbers(matches);
-    for (let [text] of iterator) {
-    }
+    print(line);
+    if (!line) continue
+    let [_, l1, l2] = line.match(/(\d+) +(\d+)/);
+    lists[0].push(+l1)
+    lists[1].push(+l2)
 }
 
-print(total);
+lists[0].sort();
+lists[1].sort();
+
+lists[0].forEach((n, i) => {
+
+    let cnt = lists[1].reduce((p, n2) => {
+        if (n === n2) return p + 1;
+        return p;
+    }, 0)
+    total += n * cnt;
+})
+
+print(total)
