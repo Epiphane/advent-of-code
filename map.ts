@@ -32,18 +32,30 @@ export class Map<T> {
     return result;
   }
 
-  contains(x: number, y: number) {
+  contains(x: Point | number, y: number) {
+    if (typeof (x) === 'object') {
+      return this.contains(x.x, x.y);
+    }
+
     return x >= this.min.x &&
       x < this.max.x &&
       y >= this.min.y &&
       y < this.max.y;
   }
 
-  has(x: number, y: number) {
+  has(x: Point | number, y: number) {
+    if (typeof (x) === 'object') {
+      return this.has(x.x, x.y);
+    }
+
     return this.contents[y] && this.contents[y].hasOwnProperty(x);
   }
 
-  get(x: number, y: number) {
+  get(x: Point | number, y: number) {
+    if (typeof (x) === 'object') {
+      return this.get(x.x, x.y);
+    }
+
     if (!this.has(x, y)) {
       return this.defaultValue;
     }
@@ -51,7 +63,11 @@ export class Map<T> {
     return this.contents[y][x];
   }
 
-  set(x: number, y: number, value: T) {
+  set(x: Point | number, y: number, value: T) {
+    if (typeof (x) === 'object') {
+      return this.set(x.x, x.y, y as any as T);
+    }
+
     if (!this.min || !this.max) {
       this.min = new Point(x, y);
       this.max = new Point(x + 1, y + 1);
@@ -100,7 +116,7 @@ export class Map<T> {
     return result;
   }
 
-  print(colDelimiter = "", rowDelimiter = "\n") {
+  print(colDelimiter = "", rowDelimiter = "\n", pad = true) {
     if (!this.min || !this.max) {
       return "";
     }
@@ -120,7 +136,7 @@ export class Map<T> {
       rows.push(row);
     }
     return rows
-      .map((row) => row.map((val) => val.padEnd(maxSize + 1)).join(colDelimiter))
+      .map((row) => row.map((val) => val.padEnd(maxSize + (pad ? 1 : 0))).join(colDelimiter))
       .join(rowDelimiter);
   }
 
@@ -166,6 +182,18 @@ export class Map<T> {
     dist = 1,
     diagonal = false
   ) {
+    /*
+    if (typeof (cx) === 'object') {
+      this.forAdjacent(
+        cx.x,
+        cx.y,
+        cy as any as (value: T, x: number, y: number) => void),
+        callback as any as number,
+        dist as any as boolean
+      );
+    }
+      */
+
     if (diagonal) {
       this.forNeighbors(cx, cy, callback, dist);
     }
@@ -264,6 +292,12 @@ export class Map<T> {
     }, excludeUndefined);
 
     return result;
+  }
+
+  search(
+    callback: (value: T, x: number, y: number) => boolean
+  ) {
+
   }
 }
 
